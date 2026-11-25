@@ -161,9 +161,9 @@ app.on('browser-window-created', (_event, win) => {
       assert(state.removeButtons >= 1, 'Expected a remove control for the installed plugin');
       assert(state.appUpdateVisible, 'App update banner should be visible');
       assert(state.appUpdateVersions.includes('999.0.0'), 'App update version line missing latest version');
-      assert(state.downloadAction === 'Download Update', 'App update download action missing');
+      assert(state.downloadAction === 'Download Update (DMG)', 'App update download action missing');
       assert(state.platform === 'mac', `Unexpected platform: ${state.platform}`);
-      assert(/^Built for macOS$/.test(state.footer), `Unexpected footer: ${state.footer}`);
+      assert(/^Built for Apple Silicon Mac \(M-series\)$/.test(state.footer), `Unexpected footer: ${state.footer}`);
       assert(state.titlebarBrand, 'KYROlll wordmark missing from the title bar');
       console.log('SMOKE UI OK');
     } catch (err) {

@@ -37,11 +37,12 @@ function platformInfo(platform = process.platform) {
     };
   }
   if (key === 'mac') {
+    const appleSilicon = process.arch === 'arm64';
     return {
       key,
       id: 'mac',
-      name: 'macOS',
-      label: 'macOS',
+      name: appleSilicon ? 'macOS (Apple Silicon)' : 'macOS (Intel)',
+      label: appleSilicon ? 'Apple Silicon Mac (M-series)' : 'Intel Mac (Intel chip)',
       formats: ['AU', 'VST3'],
       extension: '.dmg',
     };

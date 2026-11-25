@@ -73,6 +73,21 @@ function platformLabel() {
   return snapshot?.platform?.label || 'macOS';
 }
 
+function appInstallerFormat() {
+  const platformId = snapshot?.platform?.id || 'mac';
+  return platformId === 'win' ? 'EXE' : 'DMG';
+}
+
+function appUpdateButtonLabel(update) {
+  if (!update?.downloadUrl) return 'View Release';
+  const url = String(update.downloadUrl).toLowerCase();
+  if (url.endsWith('.dmg')) return 'Download Update (DMG)';
+  if (url.endsWith('.exe')) return 'Download Update (EXE)';
+  if (url.endsWith('.pkg')) return 'Download Update (PKG)';
+  if (url.endsWith('.appimage')) return 'Download Update (AppImage)';
+  return 'Download Update';
+}
+
 function platformFormats() {
   return snapshot?.platform?.formats || ['AU', 'VST3'];
 }
@@ -175,13 +190,13 @@ function renderAppUpdate() {
   if (notes.length) {
     notesEl.innerHTML = `<ul>${notes.map((note) => `<li>${brandTitle(note)}</li>`).join('')}</ul>`;
   } else {
-    notesEl.innerHTML = `<p>Download the latest release for ${escapeHtml(platformLabel())} to get the newest fixes and features.</p>`;
+    notesEl.innerHTML = `<p>Download the latest KYROlll MANAGER installer for ${escapeHtml(platformLabel())} (${escapeHtml(appInstallerFormat())}) to get the newest fixes and features.</p>`;
   }
 
   const downloadBtn = $('#app-update-download');
   const url = update.downloadUrl || update.releaseUrl;
   downloadBtn.disabled = !url;
-  downloadBtn.textContent = update.downloadUrl ? 'Download Update' : 'View Release';
+  downloadBtn.textContent = appUpdateButtonLabel(update);
   downloadBtn.title = url || 'No download link has been published yet.';
 }
 

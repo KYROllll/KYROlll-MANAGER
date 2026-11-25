@@ -7,7 +7,7 @@
     "releasedAt": "2026-11-25",
     "releaseNotes": [
       "Plug-ins delivered and managed inside the app — no standalone plug-in downloads",
-      "Clean installers for Apple Silicon Mac, Intel Mac and Windows",
+      "Clean installers for Apple Silicon Mac (M-series), Intel Mac (Intel chip), and Windows",
       "Live catalog and release feed support",
       "Plugin update detection with version deltas and changelogs",
       "One-click plugin updates and clean uninstall"
