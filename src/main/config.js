@@ -19,6 +19,12 @@ const { resourcesDir, configFile } = require('./paths');
 const DEFAULT_CATALOG_URL =
   'https://raw.githubusercontent.com/KYROllll/KYROlll-MANAGER/main/catalog.json';
 
+// The published GitHub release is the authoritative app version. The catalog
+// stays as a fallback for offline/cached starts and for hosts that mirror the
+// release metadata elsewhere.
+const DEFAULT_RELEASE_FEED_URL =
+  'https://api.github.com/repos/KYROllll/KYROlll-MANAGER/releases/latest';
+
 function readUserConfig() {
   const file = configFile();
   try {
@@ -51,6 +57,22 @@ function configNumber(key, envName, fallback) {
   return fallback;
 }
 
+const FEED_DISABLED = /^(off|none|disabled|false)$/i;
+
+/**
+ * The release feed defaults to the live GitHub release. Tests and offline
+ * installs disable it with KYROLLL_RELEASE_FEED_URL=off instead of silently
+ * inheriting the network default.
+ */
+function resolveReleaseFeedUrl() {
+  const fromEnv = envString('KYROLLL_RELEASE_FEED_URL');
+  const fromConfig =
+    typeof userConfig.releaseFeedUrl === 'string' ? userConfig.releaseFeedUrl.trim() : '';
+  const raw = fromEnv ?? fromConfig;
+  if (raw && FEED_DISABLED.test(raw)) return '';
+  return raw || DEFAULT_RELEASE_FEED_URL;
+}
+
 function configBoolean(key, envName, fallback) {
   const fromEnv = envString(envName);
   if (fromEnv) return !/^(0|false|no|off)$/i.test(fromEnv);
@@ -61,7 +83,7 @@ function configBoolean(key, envName, fallback) {
 module.exports = {
   appName: 'KYROlll MANAGER',
   catalogUrl: configString('catalogUrl', 'KYROLLL_CATALOG_URL') || DEFAULT_CATALOG_URL,
-  releaseFeedUrl: configString('releaseFeedUrl', 'KYROLLL_RELEASE_FEED_URL'),
+  releaseFeedUrl: resolveReleaseFeedUrl(),
   appDownloadPage: configString('appDownloadPage', 'KYROLLL_DOWNLOAD_PAGE'),
   fallbackCatalogFile: path.join(resourcesDir(), 'catalog.fallback.json'),
   demoArchiveDir: path.join(resourcesDir(), 'demo'),

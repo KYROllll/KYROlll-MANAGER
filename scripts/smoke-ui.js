@@ -110,7 +110,9 @@ process.env.KYROLLL_STATE_DIR = stateDir;
 process.env.KYROLLL_COMPONENTS_DIR = auDir;
 process.env.KYROLLL_VST3_DIR = vstDir;
 process.env.KYROLLL_CATALOG_URL = `file://${catalogPath}`;
-process.env.KYROLLL_RELEASE_FEED_URL = '';
+// Keep the smoke run fully offline: the real app defaults to the live GitHub
+// release feed, which must not override this fixture.
+process.env.KYROLLL_RELEASE_FEED_URL = 'off';
 
 const { app } = require('electron');
 
@@ -140,6 +142,8 @@ app.on('browser-window-created', (_event, win) => {
             appUpdateTitle: text('#app-update-title'),
             appUpdateVersions: text('#app-update-version-line'),
             downloadAction: document.querySelector('#app-update-download')?.textContent?.trim() || '',
+            heroStats: [...document.querySelectorAll('.stat')].map((stat) => stat.textContent.replace(/\s+/g, ' ').trim()),
+            updateStatus: text('.status.update'),
             platform: document.body.dataset.platform || '',
             footer: text('#platform-label'),
             titlebarBrand: Boolean(document.querySelector('.brand-wordmark-img--header')),
@@ -162,6 +166,11 @@ app.on('browser-window-created', (_event, win) => {
       assert(state.appUpdateVisible, 'App update banner should be visible');
       assert(state.appUpdateVersions.includes('999.0.0'), 'App update version line missing latest version');
       assert(state.downloadAction === 'Download Update (DMG)', 'App update download action missing');
+      assert(
+        state.heroStats.some((stat) => stat.includes('01') && stat.includes('UPDATE READY')),
+        `Expected an UPDATE READY hero stat, got ${JSON.stringify(state.heroStats)}`
+      );
+      assert(state.updateStatus === 'UPDATE AVAILABLE', `Unexpected plugin status: ${state.updateStatus}`);
       assert(state.platform === 'mac', `Unexpected platform: ${state.platform}`);
       assert(/^Built for Apple Silicon Mac \(M-series\)$/.test(state.footer), `Unexpected footer: ${state.footer}`);
       assert(state.titlebarBrand, 'KYROlll wordmark missing from the title bar');

@@ -18,7 +18,7 @@ const SOURCE_LABELS = {
 const STATUS_LABELS = {
   'not-installed': { text: 'Not Installed', className: '' },
   installed: { text: 'Installed', className: 'installed' },
-  'update-available': { text: 'Update Available', className: 'update' },
+  'update-available': { text: 'UPDATE AVAILABLE', className: 'update' },
 };
 
 let snapshot = null;
@@ -26,6 +26,7 @@ let activeInstall = null;
 let selectedPluginId = null;
 let toastTimer = null;
 let refreshing = false;
+let appDownload = null;
 const dismissedAppUpdates = new Set();
 const notifiedAppUpdates = new Set();
 
@@ -173,6 +174,64 @@ function renderCatalogError() {
 
 /* ---------- app update ---------- */
 
+const INSTALLER_URL_PATTERN = /\.(dmg|pkg|exe|msi|appimage)$/i;
+
+function isInstallerUrl(url) {
+  return Boolean(url) && INSTALLER_URL_PATTERN.test(String(url).split(/[?#]/)[0]);
+}
+
+function appDownloadPercent() {
+  if (!appDownload) return 0;
+  if (appDownload.percent != null) return appDownload.percent;
+  if (appDownload.total) return Math.round((appDownload.received / appDownload.total) * 100);
+  return 0;
+}
+
+/* Button + progress line for the in-app installer download. */
+function renderAppDownloadState(update) {
+  const button = $('#app-update-download');
+  const progress = $('#app-update-progress');
+  if (!button || !progress) return;
+  const url = update?.downloadUrl || update?.releaseUrl;
+  const streamable = isInstallerUrl(update?.downloadUrl);
+
+  if (appDownload?.status === 'running') {
+    const percent = appDownloadPercent();
+    button.disabled = true;
+    button.textContent = percent ? `Downloading ${percent}%` : 'Downloading…';
+    button.title = 'Downloading the installer inside KYROlll MANAGER…';
+    progress.hidden = false;
+    progress.textContent = appDownload.total
+      ? `Installer · ${percent}% · ${formatSize(appDownload.received)} of ${formatSize(appDownload.total)}`
+      : `Installer · ${percent}%${appDownload.received ? ` · ${formatSize(appDownload.received)}` : ''}`;
+    return;
+  }
+
+  if (appDownload?.status === 'done') {
+    button.disabled = false;
+    button.textContent = 'Show Installer';
+    button.title = appDownload.file || 'Reveal the downloaded installer';
+    progress.hidden = false;
+    progress.textContent = `Installer ready${appDownload.total ? ` · ${formatSize(appDownload.total)}` : ''} — open it, then drag KYROlll MANAGER to Applications.`;
+    return;
+  }
+
+  if (appDownload?.status === 'error') {
+    button.disabled = !url;
+    button.textContent = streamable ? appUpdateButtonLabel(update) : 'View Release';
+    button.title = url || 'No download link has been published yet.';
+    progress.hidden = false;
+    progress.textContent = appDownload.error || 'Download failed — try again.';
+    return;
+  }
+
+  button.disabled = !url;
+  button.textContent = appUpdateButtonLabel(update);
+  button.title = url || 'No download link has been published yet.';
+  progress.hidden = true;
+  progress.textContent = '';
+}
+
 function renderAppUpdate() {
   const section = $('#app-update');
   const update = snapshot?.appUpdate;
@@ -180,6 +239,9 @@ function renderAppUpdate() {
     section.hidden = true;
     return;
   }
+
+  // A newer release resets any finished download from the previous version.
+  if (appDownload?.version && appDownload.version !== update.latestVersion) appDownload = null;
 
   section.hidden = false;
   $('#app-update-version-line').textContent = `v${update.currentVersion} → v${update.latestVersion}`;
@@ -193,11 +255,7 @@ function renderAppUpdate() {
     notesEl.innerHTML = `<p>Download the latest KYROlll MANAGER installer for ${escapeHtml(platformLabel())} (${escapeHtml(appInstallerFormat())}) to get the newest fixes and features.</p>`;
   }
 
-  const downloadBtn = $('#app-update-download');
-  const url = update.downloadUrl || update.releaseUrl;
-  downloadBtn.disabled = !url;
-  downloadBtn.textContent = appUpdateButtonLabel(update);
-  downloadBtn.title = url || 'No download link has been published yet.';
+  renderAppDownloadState(update);
 }
 
 function maybeNotifyAppUpdate() {
@@ -208,15 +266,63 @@ function maybeNotifyAppUpdate() {
   showToast(`${update.latestVersion} of KYROlll MANAGER is available.`);
 }
 
-function openAppUpdate() {
+async function openAppUpdate() {
   const update = snapshot?.appUpdate;
-  const url = update?.downloadUrl || update?.releaseUrl;
+  if (!update) return;
+
+  if (appDownload?.status === 'done' && appDownload.file) {
+    api.revealFile(appDownload.file);
+    return;
+  }
+  if (appDownload?.status === 'running') return;
+
+  const url = update.downloadUrl || update.releaseUrl;
   if (!url) {
     showToast('No app download link has been published yet.');
     return;
   }
-  api.openExternal(url);
-  showToast(`Opening KYROlll MANAGER ${update.latestVersion} download…`);
+
+  // A release page (no installer asset) still opens in the browser.
+  if (!isInstallerUrl(update.downloadUrl)) {
+    api.openExternal(url);
+    showToast(`Opening KYROlll MANAGER ${update.latestVersion} download…`);
+    return;
+  }
+
+  appDownload = {
+    status: 'running',
+    percent: 0,
+    received: 0,
+    total: update.size || 0,
+    file: null,
+    version: update.latestVersion,
+  };
+  renderAppDownloadState(update);
+
+  const result = await api.downloadAppUpdate();
+  if (!result?.ok) {
+    if (result?.code === 'NOT_INSTALLER') {
+      appDownload = null;
+      renderAppDownloadState(update);
+      api.openExternal(url);
+      return;
+    }
+    appDownload = { status: 'error', error: result?.error || 'Download failed.', version: update.latestVersion };
+    renderAppDownloadState(update);
+    showToast(result?.error || 'Could not download the installer.');
+    return;
+  }
+
+  appDownload = {
+    status: 'done',
+    percent: 100,
+    received: result.size || 0,
+    total: result.size || 0,
+    file: result.file,
+    version: update.latestVersion,
+  };
+  renderAppDownloadState(update);
+  showToast(`KYROlll MANAGER ${update.latestVersion} installer saved to Downloads.`);
 }
 
 function actionLabel(plugin) {
@@ -705,6 +811,23 @@ api.onSnapshotUpdated((next) => {
   if (!next) return;
   snapshot = next;
   render();
+});
+
+api.onAppDownloadProgress((payload) => {
+  if (!appDownload || appDownload.status !== 'running' || !payload) return;
+  if (payload.phase === 'error') {
+    appDownload = { status: 'error', error: payload.error || 'Download failed.', version: appDownload.version };
+  } else {
+    if (payload.percent != null) appDownload.percent = payload.percent;
+    if (payload.received != null) appDownload.received = payload.received;
+    if (payload.total) appDownload.total = payload.total;
+    if (payload.file) appDownload.file = payload.file;
+    if (payload.phase === 'done') {
+      appDownload.status = 'done';
+      appDownload.percent = 100;
+    }
+  }
+  renderAppDownloadState(snapshot?.appUpdate);
 });
 
 (async function boot() {

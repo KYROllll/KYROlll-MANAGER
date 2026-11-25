@@ -535,6 +535,15 @@ h1, h2, h3, h4, h5, h6, p, label, .badge {
   margin-top: 3px;
 }
 
+.app-update-progress {
+  margin: 12px 0 0;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .app-update-actions {
   display: flex;
   align-items: center;

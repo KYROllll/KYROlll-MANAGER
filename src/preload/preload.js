@@ -11,6 +11,13 @@ contextBridge.exposeInMainWorld('kyrolll', {
   cancelInstall: (runId) => ipcRenderer.invoke('hub:cancel-install', runId),
   open: (target) => ipcRenderer.invoke('hub:open', target),
   openExternal: (url) => ipcRenderer.invoke('hub:open-external', url),
+  downloadAppUpdate: () => ipcRenderer.invoke('hub:download-app-update'),
+  revealFile: (file) => ipcRenderer.invoke('hub:reveal-file', file),
+  onAppDownloadProgress: (callback) => {
+    const listener = (_event, payload) => callback(payload);
+    ipcRenderer.on('hub:app-download-progress', listener);
+    return () => ipcRenderer.removeListener('hub:app-download-progress', listener);
+  },
   onInstallProgress: (callback) => {
     const listener = (_event, payload) => callback(payload);
     ipcRenderer.on('hub:install-progress', listener);

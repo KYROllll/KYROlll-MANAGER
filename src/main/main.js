@@ -2,7 +2,8 @@
 
 const path = require('node:path');
 const fs = require('node:fs');
-const { app, BrowserWindow, Menu, ipcMain, shell, nativeImage, dialog } = require('electron');
+const crypto = require('node:crypto');
+const { app, BrowserWindow, Menu, ipcMain, shell, nativeImage, dialog, net } = require('electron');
 const config = require('./config');
 const catalog = require('./catalog');
 const appUpdate = require('./appUpdate');
@@ -71,6 +72,157 @@ async function backgroundUpdateCheck() {
     sendSnapshot(snapshot);
   } catch {
     // Offline is expected; the renderer keeps the bundled catalog.
+  }
+}
+
+/* ---------- in-app installer download ---------- */
+
+const INSTALLER_URL = /\.(dmg|pkg|exe|msi|appimage)$/i;
+const UPDATE_RECHECK_MS = 6 * 60 * 60 * 1000;
+let updateTimer = null;
+
+function installerFileName(url) {
+  try {
+    const name = decodeURIComponent(path.basename(new URL(url).pathname));
+    const safe = name.replace(/[^a-z0-9._-]/gi, '-');
+    if (INSTALLER_URL.test(safe)) return safe;
+  } catch {
+    // fall through to a sensible default
+  }
+  return `KYROlll-MANAGER-${app.getVersion()}${process.platform === 'win32' ? '.exe' : '.dmg'}`;
+}
+
+function uniqueDownloadPath(dir, name) {
+  const extension = path.extname(name);
+  const base = path.basename(name, extension);
+  let candidate = path.join(dir, name);
+  for (let index = 2; fs.existsSync(candidate); index += 1) {
+    candidate = path.join(dir, `${base}-${index}${extension}`);
+  }
+  return candidate;
+}
+
+/** Stream the published installer to the Downloads folder with progress. */
+function streamToFile(url, destination, onProgress) {
+  return new Promise((resolve, reject) => {
+    const request = net.request({ url, method: 'GET', redirect: 'follow' });
+    const writer = fs.createWriteStream(destination);
+    let received = 0;
+    let total = 0;
+    let settled = false;
+    let inactivity = null;
+
+    const fail = (err) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(inactivity);
+      writer.destroy();
+      request.abort();
+      reject(err);
+    };
+
+    const resetInactivity = () => {
+      clearTimeout(inactivity);
+      inactivity = setTimeout(
+        () => fail(new Error('Download stalled — no data received for 45 seconds.')),
+        45000
+      );
+    };
+
+    writer.on('error', fail);
+    writer.on('finish', () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(inactivity);
+      resolve({ received, total });
+    });
+
+    request.on('response', (response) => {
+      if (response.statusCode < 200 || response.statusCode >= 300) {
+        response.resume();
+        fail(new Error(`Server responded with HTTP ${response.statusCode} for the installer download.`));
+        return;
+      }
+      const lengthHeader = response.headers['content-length'];
+      total = parseInt(Array.isArray(lengthHeader) ? lengthHeader[0] : lengthHeader, 10) || 0;
+      resetInactivity();
+      response.on('data', (chunk) => {
+        received += chunk.length;
+        writer.write(chunk);
+        resetInactivity();
+        onProgress(received, total);
+      });
+      response.on('end', () => {
+        clearTimeout(inactivity);
+        writer.end();
+      });
+      response.on('error', fail);
+    });
+
+    request.on('error', fail);
+    resetInactivity();
+    request.end();
+  });
+}
+
+function sha256File(file) {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash('sha256');
+    const stream = fs.createReadStream(file);
+    stream.on('data', (chunk) => hash.update(chunk));
+    stream.on('error', reject);
+    stream.on('end', () => resolve(hash.digest('hex')));
+  });
+}
+
+async function downloadAppUpdate(sender) {
+  const update = appUpdate.getState().info;
+  if (!update || !update.updateAvailable) {
+    return { ok: false, code: 'NO_UPDATE', error: 'KYROlll MANAGER is already up to date.' };
+  }
+  const url = update.downloadUrl || '';
+  if (!/^https?:\/\//i.test(url)) {
+    return { ok: false, code: 'NO_DOWNLOAD_URL', error: 'No installer download link has been published yet.' };
+  }
+  if (!INSTALLER_URL.test(url.split(/[?#]/)[0])) {
+    return { ok: false, code: 'NOT_INSTALLER', error: 'The published link is a release page, not an installer.' };
+  }
+
+  const send = (payload) => {
+    if (sender && !sender.isDestroyed()) sender.send('hub:app-download-progress', payload);
+  };
+
+  const downloads = app.getPath('downloads');
+  await fs.promises.mkdir(downloads, { recursive: true }).catch(() => {});
+  const file = uniqueDownloadPath(downloads, installerFileName(url));
+
+  send({ phase: 'downloading', percent: 0, received: 0, total: update.size || 0, file });
+  try {
+    const { received } = await streamToFile(url, file, (bytes, total) => {
+      send({
+        phase: 'downloading',
+        percent: total ? Math.round((bytes / total) * 100) : null,
+        received: bytes,
+        total: total || update.size || 0,
+        file,
+      });
+    });
+
+    const stats = await fs.promises.stat(file);
+    if (update.size && stats.size !== update.size) {
+      throw new Error(`Downloaded installer is ${stats.size} bytes but the release lists ${update.size}.`);
+    }
+    if (update.sha256) {
+      const digest = await sha256File(file);
+      if (digest !== update.sha256) throw new Error('Installer checksum mismatch — the download was incomplete.');
+    }
+
+    send({ phase: 'done', percent: 100, received: stats.size, total: stats.size, file });
+    return { ok: true, file, size: stats.size, version: update.latestVersion };
+  } catch (err) {
+    await fs.promises.rm(file, { force: true }).catch(() => {});
+    send({ phase: 'error', error: err.message || 'Download failed.' });
+    return { ok: false, code: 'APP_DOWNLOAD_FAILED', error: err.message || 'Download failed.' };
   }
 }
 
@@ -155,6 +307,16 @@ function registerIpc() {
   ipcMain.handle('hub:check-app-update', async () => {
     await appUpdate.check(app.getVersion());
     return buildSnapshot();
+  });
+
+  ipcMain.handle('hub:download-app-update', async (event) => downloadAppUpdate(event.sender));
+
+  ipcMain.handle('hub:reveal-file', async (_event, file) => {
+    if (typeof file !== 'string' || !path.isAbsolute(file) || !fs.existsSync(file)) {
+      return { ok: false, error: 'That file is no longer available.' };
+    }
+    shell.showItemInFolder(file);
+    return { ok: true };
   });
 
   ipcMain.handle('hub:open', async (_event, target) => {
@@ -314,7 +476,12 @@ if (!app.requestSingleInstanceLock()) {
     createWindow();
 
     if (config.autoCheckOnLaunch && (config.catalogUrl || config.releaseFeedUrl)) {
-      mainWindow.webContents.once('did-finish-load', () => backgroundUpdateCheck());
+      mainWindow.webContents.once('did-finish-load', () => {
+        backgroundUpdateCheck();
+        // Keep long-running sessions current without hammering the network.
+        clearInterval(updateTimer);
+        updateTimer = setInterval(backgroundUpdateCheck, UPDATE_RECHECK_MS);
+      });
     }
 
     app.on('activate', () => {
@@ -325,4 +492,6 @@ if (!app.requestSingleInstanceLock()) {
   app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
   });
+
+  app.on('will-quit', () => clearInterval(updateTimer));
 }

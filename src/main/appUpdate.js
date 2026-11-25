@@ -123,6 +123,7 @@ async function check(currentVersion) {
       downloadUrl: download?.url || releaseUrl,
       releaseUrl,
       size: download?.size || null,
+      sha256: download?.sha256 || null,
       downloads: latest.downloads || {},
     },
     source: latest === feed ? 'feed' : latest === catalogApp ? 'catalog' : 'none',
