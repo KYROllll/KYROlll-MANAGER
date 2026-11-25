@@ -903,6 +903,32 @@ h1, h2, h3, h4, h5, h6, p, label, .badge {
 
 /* ---------- footer ---------- */
 
+.first-launch {
+  margin: 32px 0 0;
+  padding: 18px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.first-launch h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.first-launch p {
+  margin: 6px 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.first-launch code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text);
+}
+
 .footer {
   margin-top: 48px;
   padding: 28px 0 36px;

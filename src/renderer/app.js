@@ -275,7 +275,6 @@ function renderCard(plugin, index) {
   const previewSrc = plugin.image || plugin.preview || '../assets/kyrolll-soul-plugin.png';
   return `
     <article class="plugin-card${isFeatured ? ' featured' : ''}${isUpdate ? ' update-card' : ''}" data-action="open-detail" data-plugin-id="${escapeHtml(plugin.id)}" data-plugin="${escapeHtml(plugin.id)}">
-      <span class="card-index" aria-hidden="true">${String(index + 1).padStart(2, '0')}</span>
       <div class="card-preview"><img src="${escapeHtml(previewSrc)}" alt="" /></div>
       <div class="card-top">
         <h3 class="plugin-name">${brandTitle(plugin.name)}</h3>
