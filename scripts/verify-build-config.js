@@ -31,10 +31,15 @@ console.log('electron-builder targets');
 check('appId is set', Boolean(build.appId));
 check('productName is KYROlll', build.productName === 'KYROlll');
 check('main entry exists', Boolean(pkg.main) && fs.existsSync(path.join(ROOT, pkg.main)), pkg.main);
-check('mac target includes dmg', Array.isArray(build.mac?.target) && build.mac.target.includes('dmg'));
-check('Windows target includes nsis', Array.isArray(build.win?.target) && build.win.target.some((t) => t.target === 'nsis'));
-check('Windows target includes zip', Array.isArray(build.win?.target) && build.win.target.some((t) => t.target === 'zip'));
+check('mac target is DMG only', Array.isArray(build.mac?.target) && build.mac.target.length === 1 && build.mac.target[0] === 'dmg');
+check('mac artifact names include architecture', String(build.mac?.artifactName || '').includes('${arch}'));
+check('mac script builds arm64 and x64', /--arm64/.test(pkg.scripts?.['dist:mac'] || '') && /--x64/.test(pkg.scripts?.['dist:mac'] || ''));
+check('Windows target is NSIS only', Array.isArray(build.win?.target) && build.win.target.length === 1 && build.win.target[0].target === 'nsis');
 check('Windows targets publish x64', build.win?.target?.every((t) => !t.arch || t.arch.includes('x64')));
+check(
+  'no app ZIP targets are configured',
+  !(build.mac?.target || []).includes('zip') && !(build.win?.target || []).some((t) => t.target === 'zip')
+);
 check('nsis allows install directory choice', build.nsis?.allowToChangeInstallationDirectory === true);
 check('icon exists', fs.existsSync(path.join(ROOT, build.mac?.icon || 'build/icon.png')));
 check('fallback catalog exists', fs.existsSync(path.join(ROOT, 'resources', 'catalog.fallback.json')));
@@ -66,6 +71,13 @@ const repositoryRaw = fs.existsSync(repositoryCatalogPath)
   : null;
 const repositoryNormalized = repositoryRaw ? catalog.normalizeCatalog(repositoryRaw) : null;
 check('fallback catalog normalizes', normalized.plugins.length > 0);
+check(
+  'fallback app has three clean targets',
+  Boolean(normalized.app?.downloads.macArm64?.url) &&
+    Boolean(normalized.app?.downloads.macIntel?.url) &&
+    Boolean(normalized.app?.downloads.win?.url) &&
+    Object.keys(normalized.app?.downloads || {}).length === 3
+);
 check('plugin has macOS app-managed package', Boolean(normalized.plugins[0].downloads.mac?.url));
 check('plugin has Windows app-managed package', Boolean(normalized.plugins[0].downloads.win?.url));
 check(
@@ -81,11 +93,26 @@ console.log('repository catalog');
 const releaseRoot = 'https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/';
 const plugin = repositoryNormalized?.plugins?.[0];
 check('catalog.json exists at repo root', Boolean(repositoryNormalized));
-check('catalog app has macOS download', Boolean(repositoryNormalized?.app?.downloads.mac?.url));
-check('catalog app has Windows download', Boolean(repositoryNormalized?.app?.downloads.win?.url));
+const appDownloads = repositoryNormalized?.app?.downloads || {};
+check('catalog app has Apple Silicon download', Boolean(appDownloads.macArm64?.url));
+check('catalog app has Intel download', Boolean(appDownloads.macIntel?.url));
+check('catalog app has Windows download', Boolean(appDownloads.win?.url));
+check('catalog app has exactly three downloads', Object.keys(appDownloads).length === 3, Object.keys(appDownloads).join(','));
 check(
   'app downloads target repository release assets',
-  Object.values(repositoryNormalized?.app?.downloads || {}).every((download) => download.url.startsWith(releaseRoot))
+  Object.values(appDownloads).every((download) => download.url.startsWith(releaseRoot))
+);
+check(
+  'app downloads are installer files, not ZIPs',
+  Object.values(appDownloads).every((download) => !/\.zip$/i.test(download.url))
+);
+check(
+  'app download resolver selects Apple Silicon',
+  /arm64/i.test(catalog.appDownloadFor(appDownloads, 'darwin', 'arm64')?.url || '')
+);
+check(
+  'app download resolver selects Intel',
+  /x64/i.test(catalog.appDownloadFor(appDownloads, 'darwin', 'x64')?.url || '')
 );
 check('KYROlll SOUL is in repository catalog', plugin?.id === 'kyrolll-soul');
 check('SOUL has macOS + Windows app-managed packages', Boolean(plugin?.downloads.mac?.url) && Boolean(plugin?.downloads.win?.url));

@@ -3,7 +3,6 @@
 const config = require('./config');
 const catalog = require('./catalog');
 const { compareVersions } = require('./plugins');
-const { platformKey } = require('./paths');
 const { fetchText } = require('./net-fetch');
 
 /**
@@ -53,8 +52,11 @@ function normalizeReleaseFeed(raw) {
     const url = asset.browser_download_url || asset.url;
     const name = String(asset.name || url).toLowerCase();
     const entry = { url, size: Number.isFinite(asset.size) ? asset.size : null, sha256: null };
-    if (/\.(dmg|pkg)$/.test(name)) downloads.mac = downloads.mac || entry;
-    else if (/\.(exe|msi)$/.test(name)) downloads.win = downloads.win || entry;
+    if (/\.(dmg|pkg)$/.test(name)) {
+      if (/arm64|aarch64/.test(name)) downloads.macArm64 = downloads.macArm64 || entry;
+      else if (/x64|intel|amd64/.test(name)) downloads.macIntel = downloads.macIntel || entry;
+      else downloads.mac = downloads.mac || entry;
+    } else if (/\.(exe|msi)$/.test(name)) downloads.win = downloads.win || entry;
     else if (/\.appimage$/.test(name)) downloads.linux = downloads.linux || entry;
   }
 
@@ -108,7 +110,7 @@ async function check(currentVersion) {
     return getState();
   }
 
-  const download = catalog.downloadFor({ downloads: latest.downloads }, platformKey());
+  const download = catalog.appDownloadFor(latest.downloads);
   const releaseUrl = latest.downloadPage || config.appDownloadPage || null;
 
   state = {

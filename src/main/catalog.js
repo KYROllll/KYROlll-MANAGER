@@ -16,15 +16,20 @@ const { fetchText } = require('./net-fetch');
  * A catalog entry may provide one shared version plus per-platform downloads:
  *
  *   "downloads": {
- *     "mac": { "url": "...", "sha256": "...", "size": 48261120 },
+ *     "macArm64": { "url": "...", "sha256": "...", "size": 48261120 },
+ *     "macIntel": { "url": "...", "sha256": "...", "size": 49261120 },
  *     "win": { "url": "...", "sha256": "...", "size": 51234567 }
  *   }
  *
- * The legacy single "download" object still works and is treated as the
- * macOS/default archive.
+ * Plug-in downloads use the platform keys mac/win/linux. App downloads may
+ * additionally use macArm64/macIntel so an Apple Silicon app never downloads
+ * an Intel installer (or vice versa). The legacy single "download" object
+ * still works and is treated as the macOS/default archive.
  */
 
 const PLATFORMS = ['mac', 'win', 'linux'];
+const APP_ARCH_PLATFORMS = ['macArm64', 'macIntel'];
+const DOWNLOAD_PLATFORMS = [...PLATFORMS, ...APP_ARCH_PLATFORMS];
 
 let state = {
   catalog: null,
@@ -54,8 +59,10 @@ function normalizeDownloads(raw) {
   const source = isPlainObject(raw.downloads) ? raw.downloads : {};
   const downloads = {};
 
-  for (const platform of PLATFORMS) {
-    const entry = source[platform] ?? source[platform === 'mac' ? 'macos' : platform === 'win' ? 'windows' : platform];
+  for (const platform of DOWNLOAD_PLATFORMS) {
+    const entry =
+      source[platform] ??
+      source[platform === 'mac' ? 'macos' : platform === 'win' ? 'windows' : platform];
     const normalized = normalizeDownload(entry);
     if (normalized) downloads[platform] = normalized;
   }
@@ -78,6 +85,17 @@ function downloadFor(plugin, platform = platformKey()) {
   if (!plugin) return null;
   const downloads = plugin.downloads || {};
   return downloads[platform] || null;
+}
+
+/** Resolve an app download for this OS and CPU architecture. */
+function appDownloadFor(downloads, platform = process.platform, arch = process.arch) {
+  if (!isPlainObject(downloads)) return null;
+  const key = platformKey(platform);
+  if (key === 'mac') {
+    const archKey = arch === 'arm64' ? 'macArm64' : 'macIntel';
+    return downloads[archKey] || downloads.mac || null;
+  }
+  return downloads[key] || null;
 }
 
 function normalizeReleaseNotes(raw) {
@@ -265,4 +283,5 @@ module.exports = {
   normalizePlugin,
   normalizeApp,
   downloadFor,
+  appDownloadFor,
 };

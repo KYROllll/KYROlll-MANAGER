@@ -18,10 +18,12 @@
     "smoke:ui": "electron scripts/smoke-ui.js",
     "verify:build": "node scripts/verify-build-config.js",
     "test": "npm run verify:build && npm run smoke && npm run smoke:update",
-    "dist": "electron-builder --mac",
-    "dist:mac": "electron-builder --mac",
+    "dist": "npm run dist:mac",
+    "dist:mac": "electron-builder --mac --arm64 --x64",
+    "dist:mac:arm64": "electron-builder --mac --arm64",
+    "dist:mac:intel": "electron-builder --mac --x64",
     "dist:win": "electron-builder --win",
-    "dist:all": "electron-builder --mac --win",
+    "dist:all": "npm run dist:mac && npm run dist:win",
     "pack": "electron-builder --dir"
   },
   "dependencies": {
@@ -49,9 +51,9 @@
       "category": "public.app-category.music",
       "icon": "build/icon.png",
       "target": [
-        "dmg",
-        "zip"
+        "dmg"
       ],
+      "artifactName": "KYROlll-${version}-${arch}.${ext}",
       "darkModeSupport": true
     },
     "win": {
@@ -62,14 +64,9 @@
           "arch": [
             "x64"
           ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64"
-          ]
         }
-      ]
+      ],
+      "artifactName": "KYROlll-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,

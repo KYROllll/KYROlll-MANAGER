@@ -1,27 +1,32 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-11-25T14:38:31.725Z",
+  "updatedAt": "2026-11-25T15:39:07.979Z",
   "channel": "stable",
   "app": {
     "latestVersion": "1.0.0",
     "releasedAt": "2026-11-25",
     "releaseNotes": [
       "Plug-ins delivered and managed inside the app — no standalone plug-in downloads",
+      "Clean installers for Apple Silicon Mac, Intel Mac and Windows",
       "Live catalog and release feed support",
       "Plugin update detection with version deltas and changelogs",
-      "One-click plugin updates and clean uninstall",
-      "Windows NSIS installer and portable ZIP builds"
+      "One-click plugin updates and clean uninstall"
     ],
     "downloads": {
-      "mac": {
+      "macArm64": {
         "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-1.0.0-arm64.dmg",
-        "sha256": "7a1d7be1d5d240a7d092dacb04bb64d64116ec268c075f6f5276dc981abace12",
-        "size": 101906521
+        "sha256": "cc23cae30aea7bf84f2a4d4eeb86d3acb1849358490f94f683e002e23ef35ac3",
+        "size": 101903244
+      },
+      "macIntel": {
+        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-1.0.0-x64.dmg",
+        "sha256": "ae3aec6dd34ffebd272e5242bf997d4fd7b5e77af6529b6f6684b89080b3dd2d",
+        "size": 106503296
       },
       "win": {
-        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll.Setup.1.0.0.exe",
-        "sha256": "b78572e1f2adbecd6edf1937c1b08ec0b67f662d4a0d28c2067c04e45a573f9e",
-        "size": 89351653
+        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-Setup-1.0.0.exe",
+        "sha256": "a67cd5784fd85710ff463bb7bfc47dac95661698704a1bbc19cb24af7aed3a99",
+        "size": 89351952
       }
     },
     "downloadPage": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest"

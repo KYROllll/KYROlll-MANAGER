@@ -1,16 +1,29 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-11-25T14:38:31.725Z",
+  "updatedAt": "2026-11-25T15:34:00.295Z",
   "channel": "stable",
   "app": {
     "latestVersion": "1.0.0",
-    "releasedAt": "2026-11-24",
+    "releasedAt": "2026-11-25",
     "releaseNotes": [
-      "Live plugin update detection with version deltas and changelogs",
-      "One-click plugin updates plus clean uninstall of installed bundles",
-      "Windows build target and Windows VST3 install support"
+      "Plug-ins delivered and managed inside the app — no standalone plug-in downloads",
+      "Clean installers for Apple Silicon Mac, Intel Mac and Windows",
+      "Live catalog and release feed support",
+      "Plugin update detection with version deltas and changelogs",
+      "One-click plugin updates and clean uninstall"
     ],
-    "downloadPage": "https://kyrolll.store"
+    "downloadPage": "https://kyrolll.store",
+    "downloads": {
+      "macArm64": {
+        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-1.0.0-arm64.dmg"
+      },
+      "macIntel": {
+        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-1.0.0-x64.dmg"
+      },
+      "win": {
+        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-Setup-1.0.0.exe"
+      }
+    }
   },
   "plugins": [
     {
