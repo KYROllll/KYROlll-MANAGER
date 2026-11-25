@@ -14,13 +14,13 @@
     "downloads": {
       "mac": {
         "url": "https://github.com/KYROllll/KYROlll-APP-/releases/latest/download/KYROlll-1.0.0-arm64.dmg",
-        "sha256": "dcbcb1e0b1d18b8aaa46a6cdaae8b42b4636f4e052b3db91a5f33417aa59848a",
-        "size": 101901055
+        "sha256": "c3d42a00ce469e5fa505214739de9e38f69a31a3ee182f34facd9cd6909469fb",
+        "size": 101906826
       },
       "win": {
         "url": "https://github.com/KYROllll/KYROlll-APP-/releases/latest/download/KYROlll%20Setup%201.0.0.exe",
-        "sha256": "ad543f01ca7805007f5a3248bee12d912c7ad91d59fadfb0036b0ac7a04b2b50",
-        "size": 89350308
+        "sha256": "b68cee10b7d829623e043cc9246f76f7db898da32782dd65aa22c22472366105",
+        "size": 89350612
       }
     },
     "downloadPage": "https://github.com/KYROllll/KYROlll-APP-/releases/latest"
