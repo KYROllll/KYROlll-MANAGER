@@ -1,0 +1,82 @@
+{
+  "name": "kyrolll",
+  "productName": "KYROlll",
+  "version": "1.0.0",
+  "description": "KYROlll — installer, updater and plugin manager for KYROlll audio plugins.",
+  "private": true,
+  "license": "UNLICENSED",
+  "author": "KYROlll",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "icon": "python3 scripts/build-icon.py",
+    "demo:archive": "node scripts/make-demo-archives.js",
+    "smoke": "electron scripts/smoke-install.js",
+    "smoke:update": "electron scripts/smoke-update.js",
+    "smoke:ui": "electron scripts/smoke-ui.js",
+    "verify:build": "node scripts/verify-build-config.js",
+    "test": "npm run verify:build && npm run smoke && npm run smoke:update",
+    "dist": "electron-builder --mac",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:all": "electron-builder --mac --win",
+    "pack": "electron-builder --dir"
+  },
+  "dependencies": {
+    "extract-zip": "^2.0.1",
+    "tar": "^7.4.3"
+  },
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "com.kyrolll.KYROlll",
+    "productName": "KYROlll",
+    "copyright": "Copyright © 2026 KYROlll",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "src/**/*",
+      "resources/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "icon": "build/icon.png",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "darkModeSupport": true
+    },
+    "win": {
+      "icon": "build/icon.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "KYROlll"
+    }
+  }
+}

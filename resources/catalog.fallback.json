@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 2,
+  "updatedAt": "2026-11-24T00:00:00Z",
+  "channel": "stable",
+  "app": {
+    "latestVersion": "1.0.0",
+    "releasedAt": "2026-11-24",
+    "releaseNotes": [
+      "Live plugin update detection with version deltas and changelogs",
+      "One-click plugin updates plus clean uninstall of installed bundles",
+      "Windows build target and Windows VST3 install support"
+    ],
+    "downloadPage": "https://kyrolll.store"
+  },
+  "plugins": [
+    {
+      "id": "kyrolll-soul",
+      "name": "KYROlll SOUL",
+      "version": "1.3.0",
+      "tagline": "Analog soul, tape-worn and alive.",
+      "description": "A warm, breathing saturation unit built from hand-wound transformer models and worn tape heads. SOUL adds weight without smearing transients — from a whisper of glue to full-bodied drive.",
+      "identifier": "store.kyrolll.soul",
+      "formats": ["AU", "VST3"],
+      "featured": true,
+      "releasedAt": "2026-11-24",
+      "size": 3413,
+      "downloads": {
+        "mac": {
+          "url": "demo://kyrolll-soul",
+          "sha256": "5ae361626efd65563ae75493da7fa9d7d1e3dc8a771fc4ade2345a6cb2f8d030",
+          "size": 3413
+        },
+        "win": {
+          "url": "demo://kyrolll-soul",
+          "sha256": "5ae361626efd65563ae75493da7fa9d7d1e3dc8a771fc4ade2345a6cb2f8d030",
+          "size": 3413
+        }
+      },
+      "releaseNotes": [
+        "New tape bias control with improved low-end response",
+        "Reduced CPU usage at 96 kHz",
+        "Fixed automation smoothing on the drive knob"
+      ],
+      "image": "../assets/kyrolll-soul-plugin.png",
+      "order": 1
+    }
+  ]
+}

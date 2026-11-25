@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+    />
+    <title>KYROlll</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="titlebar">
+      <div class="brand">
+        <img class="brand-wordmark-img brand-wordmark-img--header" src="../assets/kyrolll-wordmark.svg" alt="KYROlll" />
+      </div>
+
+      <div class="titlebar-actions">
+        <span id="catalog-chip" class="chip"><i class="dot"></i> Loading</span>
+        <button id="refresh-btn" class="icon-btn" type="button" data-action="refresh" title="Check catalog for updates" aria-label="Check catalog for updates">
+          <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+            <path d="M16.2 8.4A6.3 6.3 0 1 1 15 5.1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M16.6 3.4v4.2h-4.2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="page">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow"><img class="brand-wordmark-img brand-wordmark-img--eyebrow" src="../assets/kyrolll-wordmark.svg" alt="KYROlll" /> <span class="eyebrow-sep">/</span> Plugin manager &amp; updater</p>
+          <h1 class="hero-title"><img class="brand-wordmark-img brand-wordmark-img--hero" src="../assets/kyrolll-wordmark.svg" alt="KYROlll" /></h1>
+          <p class="lede">
+            Install and update your <img class="brand-wordmark-img brand-wordmark-img--body" src="../assets/kyrolll-wordmark.svg" alt="KYROlll" /> collection without leaving the room. Bundles land
+            directly in your macOS or Windows plug-in folders — rescan, and play.
+          </p>
+          <div id="hero-stats" class="hero-stats" aria-live="polite"></div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+          <img class="hero-flower" src="../assets/kyrolll-flower.png" alt="" />
+        </div>
+      </section>
+
+      <section id="app-update" class="app-update" hidden>
+        <div class="app-update-mark">
+          <img src="../assets/kyrolll-flower.png" alt="" />
+        </div>
+        <div class="app-update-copy">
+          <p class="eyebrow">App update <span class="eyebrow-sep">/</span> <span id="app-update-version-line"></span></p>
+          <h2 id="app-update-title">A new KYROlll release is available.</h2>
+          <div id="app-update-notes" class="app-update-notes"></div>
+        </div>
+        <div class="app-update-actions">
+          <button id="app-update-download" class="btn primary" type="button" data-action="download-app-update">Download Update</button>
+          <button class="btn ghost" type="button" data-action="dismiss-app-update">Later</button>
+        </div>
+      </section>
+
+      <section class="catalog" id="catalog-section">
+        <div class="section-head">
+          <h2>Catalog</h2>
+          <span id="catalog-meta" class="catalog-meta"></span>
+        </div>
+        <div id="catalog-error" class="notice" hidden></div>
+        <div id="plugin-grid" class="plugin-grid" aria-live="polite"></div>
+      </section>
+
+      <section id="plugin-detail" class="plugin-detail" hidden>
+        <button class="back-btn" type="button" data-action="back-to-catalog" aria-label="Back to catalog">← Back to Catalog</button>
+        <div id="detail-content"></div>
+      </section>
+
+      <footer class="footer">
+        <div class="footer-meta">
+          <span id="app-version"></span>
+          <span class="footer-sep"></span>
+          <span id="platform-label">Built for macOS</span>
+        </div>
+      </footer>
+    </main>
+
+    <div id="overlay" class="overlay" hidden>
+      <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" aria-describedby="sheet-sub">
+        <div class="sheet-head">
+          <div class="sheet-mark">
+<img class="sheet-mark-img" src="../assets/kyrolll-flower.png" alt="" />
+          </div>
+          <p id="sheet-eyebrow" class="eyebrow">Installing</p>
+          <h2 id="sheet-title">Plugin</h2>
+          <p id="sheet-sub" class="sheet-sub"></p>
+        </div>
+
+        <div class="progress-wrap">
+          <div class="progress-track">
+            <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="progress-percent">0%</span>
+            <span id="progress-detail">Starting</span>
+          </div>
+        </div>
+
+        <ol id="step-list" class="steps"></ol>
+
+        <div id="sheet-result" class="sheet-result" hidden></div>
+
+        <div class="sheet-actions">
+          <button id="sheet-secondary" class="btn ghost" type="button" data-action="sheet-secondary">Cancel</button>
+          <button id="sheet-primary" class="btn primary" type="button" data-action="sheet-primary">Retry</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>

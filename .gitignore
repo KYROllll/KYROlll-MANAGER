@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+release/
+build/icon.png
+
+# Test / smoke artifacts
+/tmp/
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/
+
+# Keep generated demo archives committed so the app runs offline.
+# (resources/demo/*.zip are intentionally tracked)
