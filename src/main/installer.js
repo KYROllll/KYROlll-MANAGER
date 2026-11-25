@@ -115,6 +115,30 @@ async function demoArchivePath(url) {
   throw new InstallError(`Demo archive for "${name}" is missing. Run "npm run demo:archive" to generate it.`, 'DEMO_MISSING');
 }
 
+/**
+ * App-managed plug-in packages are shipped inside the desktop app. Catalogs
+ * reference them with app://plugins/<archive> so there is no standalone
+ * plug-in download URL to publish. Only a single archive name is accepted;
+ * the resolved path can never escape the bundled package directory.
+ */
+async function appArchivePath(url) {
+  const prefix = 'app://plugins/';
+  const name = url.startsWith(prefix) ? url.slice(prefix.length) : '';
+  if (!name || !/^[a-z0-9][a-z0-9._-]*\.(zip|tar\.gz|tgz)$/i.test(name)) {
+    throw new InstallError(`Invalid app-managed plug-in package URL: ${url}`, 'APP_PACKAGE_INVALID');
+  }
+  const file = path.join(config.pluginArchiveDir, name);
+  try {
+    await fs.access(file);
+  } catch {
+    throw new InstallError(
+      `The app-managed plug-in package "${name}" is missing from this KYROlll build. Update KYROlll and try again.`,
+      'APP_PACKAGE_MISSING'
+    );
+  }
+  return file;
+}
+
 function downloadHttp(url, destination, run, onProgress) {
   return new Promise((resolve, reject) => {
     const request = net.request({ url, method: 'GET', redirect: 'follow' });
@@ -194,6 +218,16 @@ async function download(plugin, downloadInfo, destination, run) {
     await copyLocalFile(archive, destination, (ratio) => {
       emit(run, 'downloading', 8 + ratio * 50, {
         detail: ratio >= 1 ? 'Demo archive' : `Copying demo archive ${Math.round(ratio * 100)}%`,
+      });
+    });
+    return;
+  }
+
+  if (url.startsWith('app://')) {
+    const archive = await appArchivePath(url);
+    await copyLocalFile(archive, destination, (ratio) => {
+      emit(run, 'downloading', 8 + ratio * 50, {
+        detail: ratio >= 1 ? 'App-managed package ready' : `Preparing app-managed package ${Math.round(ratio * 100)}%`,
       });
     });
     return;

@@ -65,6 +65,7 @@ module.exports = {
   appDownloadPage: configString('appDownloadPage', 'KYROLLL_DOWNLOAD_PAGE'),
   fallbackCatalogFile: path.join(resourcesDir(), 'catalog.fallback.json'),
   demoArchiveDir: path.join(resourcesDir(), 'demo'),
+  pluginArchiveDir: path.join(resourcesDir(), 'plugins'),
   requestTimeoutMs: configNumber('requestTimeoutMs', 'KYROLLL_REQUEST_TIMEOUT_MS', 8000),
   autoCheckOnLaunch: configBoolean('autoCheckOnLaunch', 'KYROLLL_AUTO_CHECK', true),
   supportedArchiveExtensions: ['.zip', '.tar.gz', '.tgz'],

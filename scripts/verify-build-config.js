@@ -10,6 +10,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 
 const ROOT = path.join(__dirname, '..');
 const failures = [];
@@ -37,7 +38,7 @@ check('Windows targets publish x64', build.win?.target?.every((t) => !t.arch || 
 check('nsis allows install directory choice', build.nsis?.allowToChangeInstallationDirectory === true);
 check('icon exists', fs.existsSync(path.join(ROOT, build.mac?.icon || 'build/icon.png')));
 check('fallback catalog exists', fs.existsSync(path.join(ROOT, 'resources', 'catalog.fallback.json')));
-check('demo archive exists', fs.existsSync(path.join(ROOT, 'resources', 'demo', 'kyrolll-soul.zip')));
+check('app-managed plug-in package directory exists', fs.existsSync(path.join(ROOT, 'resources', 'plugins')));
 
 console.log('cross-platform paths');
 const { pluginDirsFor, platformInfo } = require('../src/main/paths');
@@ -65,8 +66,12 @@ const repositoryRaw = fs.existsSync(repositoryCatalogPath)
   : null;
 const repositoryNormalized = repositoryRaw ? catalog.normalizeCatalog(repositoryRaw) : null;
 check('fallback catalog normalizes', normalized.plugins.length > 0);
-check('plugin has macOS download', Boolean(normalized.plugins[0].downloads.mac?.url));
-check('plugin has Windows download', Boolean(normalized.plugins[0].downloads.win?.url));
+check('plugin has macOS app-managed package', Boolean(normalized.plugins[0].downloads.mac?.url));
+check('plugin has Windows app-managed package', Boolean(normalized.plugins[0].downloads.win?.url));
+check(
+  'fallback plug-in downloads use app-managed packages',
+  Object.values(normalized.plugins[0].downloads || {}).every((download) => download.url.startsWith('app://plugins/'))
+);
 check('plugin has checksum + size', Boolean(normalized.plugins[0].downloads.mac?.sha256) && normalized.plugins[0].downloads.mac.size > 0);
 check('plugin changelog present', normalized.plugins[0].releaseNotes.length > 0);
 check('app release metadata present', Boolean(normalized.app?.latestVersion), JSON.stringify(normalized.app));
@@ -83,14 +88,34 @@ check(
   Object.values(repositoryNormalized?.app?.downloads || {}).every((download) => download.url.startsWith(releaseRoot))
 );
 check('KYROlll SOUL is in repository catalog', plugin?.id === 'kyrolll-soul');
-check('SOUL has macOS + Windows release downloads', Boolean(plugin?.downloads.mac?.url) && Boolean(plugin?.downloads.win?.url));
+check('SOUL has macOS + Windows app-managed packages', Boolean(plugin?.downloads.mac?.url) && Boolean(plugin?.downloads.win?.url));
 check(
-  'SOUL downloads target repository release assets',
-  Object.values(plugin?.downloads || {}).every((download) => download.url.startsWith(releaseRoot))
+  'SOUL is not exposed as a public release asset',
+  Object.values(plugin?.downloads || {}).every((download) => !download.url.startsWith(releaseRoot) && !/^https?:\/\//i.test(download.url))
+);
+check(
+  'SOUL downloads use app-managed packages',
+  Object.values(plugin?.downloads || {}).every((download) => download.url.startsWith('app://plugins/'))
 );
 check(
   'SOUL checksum and size fields are explicit',
   Object.values(plugin?.downloads || {}).every((download) => 'sha256' in download && 'size' in download)
+);
+
+const appManagedDownloads = Object.values(plugin?.downloads || {}).filter((download) => download.url.startsWith('app://plugins/'));
+const appManagedFiles = appManagedDownloads.map((download) =>
+  path.join(ROOT, 'resources', 'plugins', download.url.replace('app://plugins/', ''))
+);
+check('SOUL app-managed packages are bundled', appManagedFiles.length > 0 && appManagedFiles.every((file) => fs.existsSync(file)));
+check(
+  'SOUL app-managed package sizes match the catalog',
+  appManagedDownloads.every((download, index) => fs.statSync(appManagedFiles[index]).size === download.size)
+);
+check(
+  'SOUL app-managed package checksums match the catalog',
+  appManagedDownloads.every((download, index) =>
+    crypto.createHash('sha256').update(fs.readFileSync(appManagedFiles[index])).digest('hex') === download.sha256
+  )
 );
 
 if (failures.length) {
