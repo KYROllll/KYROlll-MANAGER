@@ -135,7 +135,7 @@ function renderHero() {
   $('#hero-stats').innerHTML = [
     { value: String(plugins.length).padStart(2, '0'), label: 'In catalog' },
     { value: String(installed).padStart(2, '0'), label: 'Installed' },
-    { value: String(updates).padStart(2, '0'), label: updates === 1 ? 'Update ready' : 'Updates ready' },
+    { value: String(updates).padStart(2, '0'), label: updates === 1 ? 'UPDATE READY' : 'UPDATES READY' },
   ]
     .map(
       (stat) => `
