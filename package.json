@@ -11,7 +11,7 @@
     "start": "electron .",
     "dev": "electron . --dev",
     "icon": "python3 scripts/build-icon.py",
-    "plugin:package": "node scripts/make-demo-archives.js",
+    "plugin:package": "node scripts/build-plugin-payload.js",
     "demo:archive": "npm run plugin:package",
     "smoke": "electron scripts/smoke-install.js",
     "smoke:update": "electron scripts/smoke-update.js",
@@ -57,6 +57,28 @@
       ],
       "artifactName": "KYROlll-MANAGER-${version}-${arch}.${ext}",
       "darkModeSupport": true
+    },
+    "dmg": {
+      "background": "build/dmg-background.png",
+      "window": {
+        "width": 660,
+        "height": 420
+      },
+      "contents": [
+        {
+          "x": 180,
+          "y": 200,
+          "type": "file"
+        },
+        {
+          "x": 480,
+          "y": 200,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "iconSize": 128,
+      "title": "KYROlll MANAGER ${version}"
     },
     "win": {
       "icon": "build/icon.png",

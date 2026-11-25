@@ -1,13 +1,13 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-11-25T19:28:14Z",
+  "updatedAt": "2026-11-25T23:43:38Z",
   "channel": "stable",
   "app": {
     "name": "KYROlll MANAGER",
     "latestVersion": "1.0.0",
     "releasedAt": "2026-11-25",
     "releaseNotes": [
-      "Plug-ins delivered and managed inside the app \u2014 no standalone plug-in downloads",
+      "Plug-ins delivered and managed inside the app — no standalone plug-in downloads",
       "Clean installers for Apple Silicon Mac (M-series), Intel Mac (Intel chip), and Windows",
       "Live catalog and release feed support",
       "Plugin update detection with version deltas and changelogs",
@@ -38,7 +38,7 @@
       "name": "KYROlll SOUL",
       "version": "1.3.0",
       "tagline": "Analog soul, tape-worn and alive.",
-      "description": "A warm, breathing saturation unit built from hand-wound transformer models and worn tape heads. SOUL adds weight without smearing transients \u2014 from a whisper of glue to full-bodied drive.",
+      "description": "A warm, breathing saturation unit built from hand-wound transformer models and worn tape heads. SOUL adds weight without smearing transients — from a whisper of glue to full-bodied drive.",
       "identifier": "store.kyrolll.soul",
       "formats": [
         "AU",
@@ -46,17 +46,17 @@
       ],
       "featured": true,
       "releasedAt": "2026-11-24",
-      "size": 3429,
+      "size": 19495,
       "downloads": {
         "mac": {
           "url": "app://plugins/kyrolll-soul-1.3.0-mac.zip",
-          "sha256": "be76da0e19378beef2174911252384ba0f9df94cad9034f67226a2219fe6fd45",
-          "size": 3429
+          "sha256": "225c11492e0b1f2950b0aefb80f28a98766acebfc438e19dd65a956ae351d19f",
+          "size": 19495
         },
         "win": {
           "url": "app://plugins/kyrolll-soul-1.3.0-win.zip",
-          "sha256": "ae9a668e057943a1bd51cc190c4982a2b112152941b60911f7f2e9ccb4c1a8d4",
-          "size": 1250
+          "sha256": "55264eeabaef80b27346b4fde5309013847debf963717bdc0055f469fddb7ba5",
+          "size": 1054
         }
       },
       "releaseNotes": [

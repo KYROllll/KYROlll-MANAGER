@@ -15,6 +15,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
+const crypto = require('node:crypto');
 
 const root = path.join(os.tmpdir(), 'kyrolll-update-smoke');
 const stateDir = path.join(root, 'state');
@@ -23,7 +24,7 @@ const vstDir = path.join(root, 'vst3');
 const catalogPath = path.join(root, 'catalog.json');
 const feedPath = path.join(root, 'release-feed.json');
 const demoZip = path.join(__dirname, '..', 'resources', 'demo', 'kyrolll-soul.zip');
-const demoSha = '5ae361626efd65563ae75493da7fa9d7d1e3dc8a771fc4ade2345a6cb2f8d030';
+const demoSha = crypto.createHash('sha256').update(fs.readFileSync(demoZip)).digest('hex');
 
 fs.rmSync(root, { recursive: true, force: true });
 for (const dir of [stateDir, auDir, vstDir]) fs.mkdirSync(dir, { recursive: true });

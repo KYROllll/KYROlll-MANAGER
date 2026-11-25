@@ -605,21 +605,6 @@ h1, h2, h3, h4, h5, h6, p, label, .badge {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
 }
 
-.card-index {
-  position: absolute;
-  top: 12px;
-  right: 18px;
-  font-family: var(--mono);
-  font-style: normal;
-  font-size: 44px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.075);
-  pointer-events: none;
-  user-select: none;
-}
-
 .card-preview {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -643,7 +628,6 @@ h1, h2, h3, h4, h5, h6, p, label, .badge {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  padding-right: 48px;
 }
 
 .plugin-name {

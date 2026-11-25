@@ -42,6 +42,18 @@ check(
 );
 check('nsis allows install directory choice', build.nsis?.allowToChangeInstallationDirectory === true);
 check('icon exists', fs.existsSync(path.join(ROOT, build.mac?.icon || 'build/icon.png')));
+check('DMG background configured', Boolean(build.dmg?.background));
+check(
+  'DMG background file exists',
+  Boolean(build.dmg?.background) && fs.existsSync(path.join(ROOT, build.dmg.background)),
+  build.dmg?.background
+);
+check(
+  'DMG contents place app and Applications link',
+  Array.isArray(build.dmg?.contents) &&
+    build.dmg.contents.some((item) => item.type === 'file') &&
+    build.dmg.contents.some((item) => item.type === 'link' && item.path === '/Applications')
+);
 check('fallback catalog exists', fs.existsSync(path.join(ROOT, 'resources', 'catalog.fallback.json')));
 check('app-managed plug-in package directory exists', fs.existsSync(path.join(ROOT, 'resources', 'plugins')));
 

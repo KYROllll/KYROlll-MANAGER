@@ -147,6 +147,7 @@ app.on('browser-window-created', (_event, win) => {
             platform: document.body.dataset.platform || '',
             footer: text('#platform-label'),
             titlebarBrand: Boolean(document.querySelector('.brand-wordmark-img--header')),
+            cardIndexBadges: document.querySelectorAll('.plugin-card .card-index').length,
           };
         })()`);
 
@@ -174,6 +175,7 @@ app.on('browser-window-created', (_event, win) => {
       assert(state.platform === 'mac', `Unexpected platform: ${state.platform}`);
       assert(/^Built for Apple Silicon Mac \(M-series\)$/.test(state.footer), `Unexpected footer: ${state.footer}`);
       assert(state.titlebarBrand, 'KYROlll wordmark missing from the title bar');
+      assert(state.cardIndexBadges === 0, `Plugin card must not show an index badge, found ${state.cardIndexBadges}`);
       console.log('SMOKE UI OK');
     } catch (err) {
       console.error('SMOKE UI FAIL:', err.stack || err.message);
