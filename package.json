@@ -1,8 +1,8 @@
 {
   "name": "kyrolll",
-  "productName": "KYROlll",
+  "productName": "KYROlll MANAGER",
   "version": "1.0.0",
-  "description": "KYROlll — installer, updater and plugin manager for KYROlll audio plugins.",
+  "description": "KYROlll MANAGER — installer, updater and plugin manager for KYROlll audio plugins.",
   "private": true,
   "license": "UNLICENSED",
   "author": "KYROlll",
@@ -36,7 +36,7 @@
   },
   "build": {
     "appId": "com.kyrolll.KYROlll",
-    "productName": "KYROlll",
+    "productName": "KYROlll MANAGER",
     "copyright": "Copyright © 2026 KYROlll",
     "directories": {
       "output": "release",
@@ -53,7 +53,7 @@
       "target": [
         "dmg"
       ],
-      "artifactName": "KYROlll-${version}-${arch}.${ext}",
+      "artifactName": "KYROlll-MANAGER-${version}-${arch}.${ext}",
       "darkModeSupport": true
     },
     "win": {
@@ -66,7 +66,7 @@
           ]
         }
       ],
-      "artifactName": "KYROlll-Setup-${version}.${ext}"
+      "artifactName": "KYROlll-MANAGER-Setup-${version}.${ext}"
     },
     "nsis": {
       "oneClick": false,
@@ -74,7 +74,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "KYROlll"
+      "shortcutName": "KYROlll MANAGER"
     }
   }
 }

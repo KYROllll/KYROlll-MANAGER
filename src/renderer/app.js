@@ -183,7 +183,7 @@ function renderAppUpdate() {
 
   section.hidden = false;
   $('#app-update-version-line').textContent = `v${update.currentVersion} → v${update.latestVersion}`;
-  $('#app-update-title').innerHTML = `${wordmark('brand-wordmark-img--inline')} ${escapeHtml(update.latestVersion)} is available.`;
+  $('#app-update-title').innerHTML = `${wordmark('brand-wordmark-img--inline')} MANAGER ${escapeHtml(update.latestVersion)} is available.`;
 
   const notes = Array.isArray(update.releaseNotes) ? update.releaseNotes : [];
   const notesEl = $('#app-update-notes');
@@ -205,7 +205,7 @@ function maybeNotifyAppUpdate() {
   if (!update || !update.updateAvailable || dismissedAppUpdates.has(update.latestVersion)) return;
   if (notifiedAppUpdates.has(update.latestVersion)) return;
   notifiedAppUpdates.add(update.latestVersion);
-  showToast(`${update.latestVersion} of KYROlll is available.`);
+  showToast(`${update.latestVersion} of KYROlll MANAGER is available.`);
 }
 
 function openAppUpdate() {
@@ -216,7 +216,7 @@ function openAppUpdate() {
     return;
   }
   api.openExternal(url);
-  showToast(`Opening KYROlll ${update.latestVersion} download…`);
+  showToast(`Opening KYROlll MANAGER ${update.latestVersion} download…`);
 }
 
 function actionLabel(plugin) {

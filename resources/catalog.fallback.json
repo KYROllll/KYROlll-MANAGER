@@ -1,12 +1,13 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-11-25T15:34:00.295Z",
+  "updatedAt": "2026-11-25T19:06:48Z",
   "channel": "stable",
   "app": {
+    "name": "KYROlll MANAGER",
     "latestVersion": "1.0.0",
     "releasedAt": "2026-11-25",
     "releaseNotes": [
-      "Plug-ins delivered and managed inside the app — no standalone plug-in downloads",
+      "Plug-ins delivered and managed inside the app \u2014 no standalone plug-in downloads",
       "Clean installers for Apple Silicon Mac (M-series), Intel Mac (Intel chip), and Windows",
       "Live catalog and release feed support",
       "Plugin update detection with version deltas and changelogs",
@@ -15,13 +16,19 @@
     "downloadPage": "https://kyrolll.store",
     "downloads": {
       "macArm64": {
-        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-1.0.0-arm64.dmg"
+        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-MANAGER-1.0.0-arm64.dmg",
+        "sha256": "2cda034c2faaa0a0e954016958973c70a517b6afb78f51b1ede866fbf906bbd3",
+        "size": 101908674
       },
       "macIntel": {
-        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-1.0.0-x64.dmg"
+        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-MANAGER-1.0.0-x64.dmg",
+        "sha256": "95785abf84b3b61d2f140995b76191c0d6df08c91117b6bd1fffe9fbf9134480",
+        "size": 106505014
       },
       "win": {
-        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-Setup-1.0.0.exe"
+        "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-MANAGER-Setup-1.0.0.exe",
+        "sha256": "6ebe1cc6ef584a90c72c24534fb0419d2e4fdcf3b412370aa4496fbaa68af61b",
+        "size": 89352276
       }
     }
   },
@@ -31,7 +38,7 @@
       "name": "KYROlll SOUL",
       "version": "1.3.0",
       "tagline": "Analog soul, tape-worn and alive.",
-      "description": "A warm, breathing saturation unit built from hand-wound transformer models and worn tape heads. SOUL adds weight without smearing transients — from a whisper of glue to full-bodied drive.",
+      "description": "A warm, breathing saturation unit built from hand-wound transformer models and worn tape heads. SOUL adds weight without smearing transients \u2014 from a whisper of glue to full-bodied drive.",
       "identifier": "store.kyrolll.soul",
       "formats": [
         "AU",

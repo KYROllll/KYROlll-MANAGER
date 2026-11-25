@@ -29,7 +29,7 @@ const build = pkg.build || {};
 
 console.log('electron-builder targets');
 check('appId is set', Boolean(build.appId));
-check('productName is KYROlll', build.productName === 'KYROlll');
+check('productName is KYROlll MANAGER', build.productName === 'KYROlll MANAGER');
 check('main entry exists', Boolean(pkg.main) && fs.existsSync(path.join(ROOT, pkg.main)), pkg.main);
 check('mac target is DMG only', Array.isArray(build.mac?.target) && build.mac.target.length === 1 && build.mac.target[0] === 'dmg');
 check('mac artifact names include architecture', String(build.mac?.artifactName || '').includes('${arch}'));

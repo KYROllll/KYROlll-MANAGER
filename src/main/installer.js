@@ -132,7 +132,7 @@ async function appArchivePath(url) {
     await fs.access(file);
   } catch {
     throw new InstallError(
-      `The app-managed plug-in package "${name}" is missing from this KYROlll build. Update KYROlll and try again.`,
+      `The app-managed plug-in package "${name}" is missing from this KYROlll MANAGER build. Update KYROlll and try again.`,
       'APP_PACKAGE_MISSING'
     );
   }

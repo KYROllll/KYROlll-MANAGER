@@ -158,6 +158,7 @@ function normalizeApp(raw) {
   const downloads = normalizeDownloads(raw);
   const releaseNotes = normalizeReleaseNotes(raw);
   return {
+    name: typeof raw.name === 'string' && raw.name.trim() ? raw.name.trim() : 'KYROlll MANAGER',
     latestVersion: version.replace(/^v/i, ''),
     releasedAt: typeof raw.releasedAt === 'string' ? raw.releasedAt : typeof raw.published_at === 'string' ? raw.published_at : null,
     releaseNotes,

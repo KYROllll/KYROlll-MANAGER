@@ -59,7 +59,7 @@ function configBoolean(key, envName, fallback) {
 }
 
 module.exports = {
-  appName: 'KYROlll',
+  appName: 'KYROlll MANAGER',
   catalogUrl: configString('catalogUrl', 'KYROLLL_CATALOG_URL') || DEFAULT_CATALOG_URL,
   releaseFeedUrl: configString('releaseFeedUrl', 'KYROLLL_RELEASE_FEED_URL'),
   appDownloadPage: configString('appDownloadPage', 'KYROLLL_DOWNLOAD_PAGE'),

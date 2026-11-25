@@ -12,7 +12,7 @@ const installer = require('./installer');
 const { pluginDirs, platformInfo } = require('./paths');
 
 const isDev = process.argv.includes('--dev');
-app.setName('KYROlll');
+app.setName(config.appName);
 app.setAppUserModelId('com.kyrolll.KYROlll');
 const ROOT = path.join(__dirname, '..', '..');
 let mainWindow = null;
@@ -181,7 +181,7 @@ function registerIpc() {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    title: 'KYROlll',
+    title: config.appName,
     width: 1180,
     height: 780,
     minWidth: 940,
@@ -201,7 +201,7 @@ function createWindow() {
   });
 
   mainWindow.once('ready-to-show', () => mainWindow.show());
-  mainWindow.setTitle('KYROlll');
+  mainWindow.setTitle(config.appName);
   mainWindow.loadFile(path.join(ROOT, 'src', 'renderer', 'index.html'));
 
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
@@ -229,8 +229,8 @@ async function checkForUpdatesFromMenu() {
     await dialog.showMessageBox(mainWindow, {
       type: 'info',
       buttons: ['OK'],
-      title: 'KYROlll',
-      message: 'KYROlll is up to date.',
+      title: config.appName,
+      message: `${config.appName} is up to date.`,
       detail: `You are running version ${app.getVersion()}.`,
     });
     return;
@@ -240,8 +240,8 @@ async function checkForUpdatesFromMenu() {
     buttons: ['Later', 'Download Update'],
     defaultId: 1,
     cancelId: 0,
-    title: 'KYROlll update available',
-    message: `KYROlll ${update.latestVersion} is available.`,
+    title: `${config.appName} update available`,
+    message: `${config.appName} ${update.latestVersion} is available.`,
     detail: `You are running ${update.currentVersion}.`,
   });
   if (response === 1 && update.downloadUrl) await shell.openExternal(update.downloadUrl);
