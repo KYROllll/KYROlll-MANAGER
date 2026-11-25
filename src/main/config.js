@@ -17,7 +17,7 @@ const { resourcesDir, configFile } = require('./paths');
  */
 
 const DEFAULT_CATALOG_URL =
-  'https://raw.githubusercontent.com/KYROllll/KYROlll-APP-/main/catalog.json';
+  'https://raw.githubusercontent.com/KYROllll/KYROlll-MANAGER/main/catalog.json';
 
 function readUserConfig() {
   const file = configFile();

@@ -73,7 +73,7 @@ check('app release metadata present', Boolean(normalized.app?.latestVersion), JS
 check('version comparison detects updates', compareVersions('1.3.0', '1.2.0') > 0);
 
 console.log('repository catalog');
-const releaseRoot = 'https://github.com/KYROllll/KYROlll-APP-/releases/latest/download/';
+const releaseRoot = 'https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/';
 const plugin = repositoryNormalized?.plugins?.[0];
 check('catalog.json exists at repo root', Boolean(repositoryNormalized));
 check('catalog app has macOS download', Boolean(repositoryNormalized?.app?.downloads.mac?.url));

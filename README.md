@@ -177,12 +177,12 @@ Configuration is read from environment variables first, then `config.json` in
 the app's userData folder (or `KYROLLL_CONFIG_FILE`), then defaults. The
 default live catalog is the `catalog.json` in this repository:
 
-`https://raw.githubusercontent.com/KYROllll/KYROlll-APP-/main/catalog.json`
+`https://raw.githubusercontent.com/KYROllll/KYROlll-MANAGER/main/catalog.json`
 
 ```json
 {
-  "catalogUrl": "https://raw.githubusercontent.com/KYROllll/KYROlll-APP-/main/catalog.json",
-  "releaseFeedUrl": "https://api.github.com/repos/KYROllll/KYROlll-APP-/releases/latest",
+  "catalogUrl": "https://raw.githubusercontent.com/KYROllll/KYROlll-MANAGER/main/catalog.json",
+  "releaseFeedUrl": "https://api.github.com/repos/KYROllll/KYROlll-MANAGER/releases/latest",
   "requestTimeoutMs": 8000,
   "autoCheckOnLaunch": true,
   "appDownloadPage": "https://kyrolll.store"
@@ -272,20 +272,20 @@ error instead of partially forgetting the install.
 
 The committed [`catalog.json`](catalog.json) is fetched from the `main` branch:
 
-- Raw catalog: `https://raw.githubusercontent.com/KYROllll/KYROlll-APP-/main/catalog.json`
-- Releases: `https://github.com/KYROllll/KYROlll-APP-/releases/latest`
+- Raw catalog: `https://raw.githubusercontent.com/KYROllll/KYROlll-MANAGER/main/catalog.json`
+- Releases: `https://github.com/KYROllll/KYROlll-MANAGER/releases/latest`
 
 Upload the first release assets with these exact names so the catalog's
 `releases/latest/download/...` URLs resolve immediately:
 
 | Asset | URL |
 |---|---|
-| macOS DMG | `https://github.com/KYROllll/KYROlll-APP-/releases/latest/download/KYROlll-1.0.0-arm64.dmg` |
-| macOS ZIP | `https://github.com/KYROllll/KYROlll-APP-/releases/latest/download/KYROlll-1.0.0-arm64-mac.zip` |
-| Windows installer | `https://github.com/KYROllll/KYROlll-APP-/releases/latest/download/KYROlll%20Setup%201.0.0.exe` |
-| Windows ZIP | `https://github.com/KYROllll/KYROlll-APP-/releases/latest/download/KYROlll-1.0.0-win.zip` |
-| KYROlll SOUL macOS | `https://github.com/KYROllll/KYROlll-APP-/releases/latest/download/KYROlll-SOUL-1.3.0-mac.zip` |
-| KYROlll SOUL Windows | `https://github.com/KYROllll/KYROlll-APP-/releases/latest/download/KYROlll-SOUL-1.3.0-win.zip` |
+| macOS DMG | `https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-1.0.0-arm64.dmg` |
+| macOS ZIP | `https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-1.0.0-arm64-mac.zip` |
+| Windows installer | `https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll%20Setup%201.0.0.exe` |
+| Windows ZIP | `https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-1.0.0-win.zip` |
+| KYROlll SOUL macOS | `https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-SOUL-1.3.0-mac.zip` |
+| KYROlll SOUL Windows | `https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-SOUL-1.3.0-win.zip` |
 
 The plugin entries ship with `sha256: null` and `size: null` until the real
 plugin archives are uploaded. Null checksums are skipped by the installer; fill
