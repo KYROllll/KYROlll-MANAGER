@@ -89,7 +89,7 @@ check(
   Object.values(plugin?.downloads || {}).every((download) => download.url.startsWith(releaseRoot))
 );
 check(
-  'SOUL checksum fields are explicit placeholders',
+  'SOUL checksum and size fields are explicit',
   Object.values(plugin?.downloads || {}).every((download) => 'sha256' in download && 'size' in download)
 );
 
