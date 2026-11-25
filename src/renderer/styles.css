@@ -139,6 +139,15 @@ h1, h2, h3, h4, h5, h6, p, label, .badge {
   min-width: 0;
 }
 
+.brand-suffix {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  color: var(--muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 /* The authentic KYROlll wordmark, extracted from the supplied logo art. */
 .brand-wordmark-img {
   display: block;
@@ -191,8 +200,20 @@ h1, h2, h3, h4, h5, h6, p, label, .badge {
 }
 
 .hero-title {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
   margin: 0 0 20px;
-  line-height: 0;
+  line-height: 1;
+}
+
+.hero-title-suffix {
+  font-family: var(--font-mono);
+  font-size: clamp(13px, 1.5vw, 18px);
+  letter-spacing: 0.3em;
+  color: var(--muted);
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .brand-divider {

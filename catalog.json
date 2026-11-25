@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-11-25T19:06:48Z",
+  "updatedAt": "2026-11-25T19:28:14Z",
   "channel": "stable",
   "app": {
     "name": "KYROlll MANAGER",
@@ -16,18 +16,18 @@
     "downloads": {
       "macArm64": {
         "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-MANAGER-1.0.0-arm64.dmg",
-        "sha256": "2cda034c2faaa0a0e954016958973c70a517b6afb78f51b1ede866fbf906bbd3",
-        "size": 101908674
+        "sha256": "98a7064881f48e01ed148975819219b4d90395cd94f8d1fb4f99fa695a0b9ab4",
+        "size": 101908858
       },
       "macIntel": {
         "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-MANAGER-1.0.0-x64.dmg",
-        "sha256": "95785abf84b3b61d2f140995b76191c0d6df08c91117b6bd1fffe9fbf9134480",
-        "size": 106505014
+        "sha256": "d9af95a0ad93907568a028df1695cdbf0920e923886a0efef892a3aa5eb340b4",
+        "size": 106505223
       },
       "win": {
         "url": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest/download/KYROlll-MANAGER-Setup-1.0.0.exe",
-        "sha256": "6ebe1cc6ef584a90c72c24534fb0419d2e4fdcf3b412370aa4496fbaa68af61b",
-        "size": 89352276
+        "sha256": "bc874d31778043700146aad6769668f63c3122261683aa53ccb0db191bd7462c",
+        "size": 89352601
       }
     },
     "downloadPage": "https://github.com/KYROllll/KYROlll-MANAGER/releases/latest"
