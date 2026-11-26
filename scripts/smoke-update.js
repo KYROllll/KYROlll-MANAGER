@@ -69,7 +69,7 @@ function writeCatalog(version) {
   fs.writeFileSync(catalogPath, JSON.stringify(catalog, null, 2), 'utf8');
 }
 
-writeCatalog('1.3.0');
+writeCatalog('1.4.0');
 
 fs.writeFileSync(
   feedPath,
@@ -135,14 +135,14 @@ app.whenReady().then(async () => {
         if (p.phase === 'done') console.log(' install progress reached 100%');
       },
     });
-    assert(record.version === '1.3.0', `Expected installed 1.3.0, got ${record.version}`);
+    assert(record.version === '1.4.0', `Expected installed 1.4.0, got ${record.version}`);
     assert(record.bundles.length === 2, `Expected 2 bundles, got ${record.bundles.length}`);
 
     let state = await installedState.read();
     let bundles = await plugins.scan();
     let views = plugins.buildPluginViews({ catalog: catalog.getState().catalog, state, bundles }).views;
     assert(views[0].status === 'installed', `Expected installed, got ${views[0].status}`);
-    assert(views[0].installedVersion === '1.3.0', `Expected detected 1.3.0, got ${views[0].installedVersion}`);
+    assert(views[0].installedVersion === '1.4.0', `Expected detected 1.4.0, got ${views[0].installedVersion}`);
     console.log('install + detection ok');
 
     // --- Windows-style bundle filtering ----------------------------------
@@ -155,13 +155,13 @@ app.whenReady().then(async () => {
     console.log('platform bundle filtering ok');
 
     // --- catalog bumps the version → update available -------------------
-    writeCatalog('1.4.0');
+    writeCatalog('1.5.0');
     await catalog.refresh();
     state = await installedState.read();
     bundles = await plugins.scan();
     views = plugins.buildPluginViews({ catalog: catalog.getState().catalog, state, bundles }).views;
     assert(views[0].status === 'update-available', `Expected update-available, got ${views[0].status}`);
-    assert(views[0].updateFrom === '1.3.0' && views[0].updateTo === '1.4.0', 'Version delta missing');
+    assert(views[0].updateFrom === '1.4.0' && views[0].updateTo === '1.5.0', 'Version delta missing');
     assert(views[0].releaseNotes.length > 0, 'Changelog missing from update view');
     assert(views[0].platformDownload?.url, 'Platform download missing from update view');
     console.log('update detection ok', views[0].updateFrom, '→', views[0].updateTo);

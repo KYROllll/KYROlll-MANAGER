@@ -93,8 +93,8 @@ check(
 check('plugin has macOS app-managed package', Boolean(normalized.plugins[0].downloads.mac?.url));
 check('plugin has Windows app-managed package', Boolean(normalized.plugins[0].downloads.win?.url));
 check(
-  'fallback plug-in downloads use app-managed packages',
-  Object.values(normalized.plugins[0].downloads || {}).every((download) => download.url.startsWith('app://plugins/'))
+  'fallback plug-in downloads keep a bundled package fallback',
+  Object.values(normalized.plugins[0].downloads || {}).every((download) => download.fallbackUrl?.startsWith('app://plugins/'))
 );
 check('plugin has checksum + size', Boolean(normalized.plugins[0].downloads.mac?.sha256) && normalized.plugins[0].downloads.mac.size > 0);
 check('plugin changelog present', normalized.plugins[0].releaseNotes.length > 0);
@@ -128,22 +128,36 @@ check(
 );
 check('KYROlll SOUL is in repository catalog', plugin?.id === 'kyrolll-soul');
 check('SOUL has macOS + Windows app-managed packages', Boolean(plugin?.downloads.mac?.url) && Boolean(plugin?.downloads.win?.url));
+const repositoryPackageRoot =
+  'https://raw.githubusercontent.com/KYROllll/KYROlll-MANAGER/main/resources/plugins/';
 check(
-  'SOUL is not exposed as a public release asset',
-  Object.values(plugin?.downloads || {}).every((download) => !download.url.startsWith(releaseRoot) && !/^https?:\/\//i.test(download.url))
+  'SOUL primary downloads are versioned repository packages',
+  Object.values(plugin?.downloads || {}).every(
+    (download) =>
+      download.url.startsWith(repositoryPackageRoot) &&
+      path.basename(download.url).includes(plugin.version)
+  )
 );
 check(
-  'SOUL downloads use app-managed packages',
-  Object.values(plugin?.downloads || {}).every((download) => download.url.startsWith('app://plugins/'))
+  'SOUL downloads keep an app-managed fallback',
+  Object.values(plugin?.downloads || {}).every((download) => download.fallbackUrl?.startsWith('app://plugins/'))
+);
+check(
+  'SOUL primary and fallback packages share a filename',
+  Object.values(plugin?.downloads || {}).every(
+    (download) => path.basename(download.url) === path.basename(download.fallbackUrl || '')
+  )
 );
 check(
   'SOUL checksum and size fields are explicit',
   Object.values(plugin?.downloads || {}).every((download) => 'sha256' in download && 'size' in download)
 );
 
-const appManagedDownloads = Object.values(plugin?.downloads || {}).filter((download) => download.url.startsWith('app://plugins/'));
+const appManagedDownloads = Object.values(plugin?.downloads || {}).filter((download) =>
+  download.fallbackUrl?.startsWith('app://plugins/')
+);
 const appManagedFiles = appManagedDownloads.map((download) =>
-  path.join(ROOT, 'resources', 'plugins', download.url.replace('app://plugins/', ''))
+  path.join(ROOT, 'resources', 'plugins', download.fallbackUrl.replace('app://plugins/', ''))
 );
 check('SOUL app-managed packages are bundled', appManagedFiles.length > 0 && appManagedFiles.every((file) => fs.existsSync(file)));
 check(

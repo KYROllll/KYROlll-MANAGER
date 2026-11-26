@@ -68,6 +68,11 @@ function formatSize(bytes) {
   return `${mb.toFixed(mb >= 100 ? 0 : 1)} MB`;
 }
 
+function shortenPath(value) {
+  if (!value) return '';
+  return String(value).replace(/^\/Users\/[^/]+/, '~');
+}
+
 /* ---------- platform & versions ---------- */
 
 function platformLabel() {
@@ -190,16 +195,25 @@ function appDownloadPercent() {
 /* Button + progress line for the in-app installer download. */
 function renderAppDownloadState(update) {
   const button = $('#app-update-download');
+  const reveal = $('#app-update-reveal');
   const progress = $('#app-update-progress');
   if (!button || !progress) return;
   const url = update?.downloadUrl || update?.releaseUrl;
   const streamable = isInstallerUrl(update?.downloadUrl);
+
+  const setReveal = (visible) => {
+    if (!reveal) return;
+    reveal.hidden = !visible;
+    reveal.textContent = 'Show Installer';
+    reveal.disabled = !(appDownload && appDownload.file);
+  };
 
   if (appDownload?.status === 'running') {
     const percent = appDownloadPercent();
     button.disabled = true;
     button.textContent = percent ? `Downloading ${percent}%` : 'Downloading…';
     button.title = 'Downloading the installer inside KYROlll MANAGER…';
+    setReveal(false);
     progress.hidden = false;
     progress.textContent = appDownload.total
       ? `Installer · ${percent}% · ${formatSize(appDownload.received)} of ${formatSize(appDownload.total)}`
@@ -209,10 +223,11 @@ function renderAppDownloadState(update) {
 
   if (appDownload?.status === 'done') {
     button.disabled = false;
-    button.textContent = 'Show Installer';
-    button.title = appDownload.file || 'Reveal the downloaded installer';
+    button.textContent = 'Install Update';
+    button.title = 'Open the downloaded installer to finish the update';
+    setReveal(true);
     progress.hidden = false;
-    progress.textContent = `Installer ready${appDownload.total ? ` · ${formatSize(appDownload.total)}` : ''} — open it, then drag KYROlll MANAGER to Applications.`;
+    progress.textContent = `Installer ready${appDownload.total ? ` · ${formatSize(appDownload.total)}` : ''} — click Install Update to open it.`;
     return;
   }
 
@@ -220,6 +235,7 @@ function renderAppDownloadState(update) {
     button.disabled = !url;
     button.textContent = streamable ? appUpdateButtonLabel(update) : 'View Release';
     button.title = url || 'No download link has been published yet.';
+    setReveal(false);
     progress.hidden = false;
     progress.textContent = appDownload.error || 'Download failed — try again.';
     return;
@@ -228,6 +244,7 @@ function renderAppDownloadState(update) {
   button.disabled = !url;
   button.textContent = appUpdateButtonLabel(update);
   button.title = url || 'No download link has been published yet.';
+  setReveal(false);
   progress.hidden = true;
   progress.textContent = '';
 }
@@ -271,7 +288,12 @@ async function openAppUpdate() {
   if (!update) return;
 
   if (appDownload?.status === 'done' && appDownload.file) {
-    api.revealFile(appDownload.file);
+    const result = await api.installAppUpdate(appDownload.file);
+    if (!result?.ok) {
+      showToast(result?.error || 'Could not open the installer.');
+      return;
+    }
+    showToast(`Opening KYROlll MANAGER ${update.latestVersion} installer…`);
     return;
   }
   if (appDownload?.status === 'running') return;
@@ -564,12 +586,22 @@ function renderSheet() {
 
   const resultEl = $('#sheet-result');
   if (status === 'success') {
+    const bundles = (activeInstall.result && activeInstall.result.bundles) || [];
+    const bundleList = bundles.length
+      ? `<ul class="sheet-paths">${bundles
+          .map(
+            (bundle) =>
+              `<li><span class="sheet-path-format">${escapeHtml(bundle.format)}</span><code>${escapeHtml(shortenPath(bundle.path))}</code></li>`
+          )
+          .join('')}</ul>`
+      : '';
     resultEl.hidden = false;
     resultEl.className = 'sheet-result success';
     resultEl.innerHTML = `
       <h3>You're up to date.</h3>
-      <p><strong>${brandTitle(plugin.name)} ${escapeHtml(plugin.version)}</strong> was placed in your ${escapeHtml(platformLabel())} plug-in folder${(plugin.formats || []).length > 1 ? 's' : ''}.
-      Rescan plug-ins in your DAW — or restart it — to see the new version.</p>`;
+      <p><strong>${brandTitle(plugin.name)} ${escapeHtml(plugin.version)}</strong> was placed in your ${escapeHtml(platformLabel())} plug-in folder${(plugin.formats || []).length > 1 ? 's' : ''}:</p>
+      ${bundleList}
+      <p>Rescan plug-ins in your DAW — or restart it — to see the new version.</p>`;
   } else if (status === 'error') {
     resultEl.hidden = false;
     resultEl.className = 'sheet-result error';
@@ -777,6 +809,9 @@ document.addEventListener('click', (event) => {
       break;
     case 'download-app-update':
       openAppUpdate();
+      break;
+    case 'reveal-app-installer':
+      if (appDownload?.file) api.revealFile(appDownload.file);
       break;
     case 'dismiss-app-update':
       if (snapshot?.appUpdate?.latestVersion) dismissedAppUpdates.add(snapshot.appUpdate.latestVersion);

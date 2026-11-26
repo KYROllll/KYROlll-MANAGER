@@ -43,12 +43,15 @@ function isPlainObject(value) {
 }
 
 function normalizeDownload(raw) {
-  if (typeof raw === 'string') return { url: raw.trim(), sha256: null, size: null, version: null };
+  if (typeof raw === 'string') return { url: raw.trim(), fallbackUrl: null, sha256: null, size: null, version: null };
   if (!isPlainObject(raw)) return null;
   const url = typeof raw.url === 'string' ? raw.url.trim() : '';
   if (!url) return null;
+  const fallbackUrl =
+    typeof raw.fallbackUrl === 'string' && raw.fallbackUrl.trim() ? raw.fallbackUrl.trim() : null;
   return {
     url,
+    fallbackUrl: fallbackUrl && fallbackUrl !== url ? fallbackUrl : null,
     sha256: typeof raw.sha256 === 'string' && raw.sha256.trim() ? raw.sha256.trim().toLowerCase() : null,
     size: Number.isFinite(raw.size) && raw.size > 0 ? raw.size : null,
     version: typeof raw.version === 'string' && raw.version.trim() ? raw.version.trim() : null,

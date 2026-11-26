@@ -311,6 +311,26 @@ function registerIpc() {
 
   ipcMain.handle('hub:download-app-update', async (event) => downloadAppUpdate(event.sender));
 
+  ipcMain.handle('hub:install-app-update', async (_event, file) => {
+    if (typeof file !== 'string' || !path.isAbsolute(file)) {
+      return { ok: false, code: 'INVALID_FILE', error: 'That installer path is not valid.' };
+    }
+    const downloads = path.resolve(app.getPath('downloads'));
+    const target = path.resolve(file);
+    if (!target.startsWith(`${downloads}${path.sep}`)) {
+      return { ok: false, code: 'OUTSIDE_DOWNLOADS', error: 'Only installers in your Downloads folder can be opened.' };
+    }
+    if (!INSTALLER_URL.test(target)) {
+      return { ok: false, code: 'NOT_INSTALLER', error: 'That file is not a KYROlll installer.' };
+    }
+    if (!fs.existsSync(target)) {
+      return { ok: false, code: 'MISSING_FILE', error: 'The downloaded installer is no longer on disk. Download it again.' };
+    }
+    const openError = await shell.openPath(target);
+    if (openError) return { ok: false, code: 'OPEN_FAILED', error: openError };
+    return { ok: true };
+  });
+
   ipcMain.handle('hub:reveal-file', async (_event, file) => {
     if (typeof file !== 'string' || !path.isAbsolute(file) || !fs.existsSync(file)) {
       return { ok: false, error: 'That file is no longer available.' };

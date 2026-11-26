@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "updatedAt": "2026-11-25T23:43:38Z",
+  "updatedAt": "2026-11-26T11:51:06Z",
   "channel": "stable",
   "app": {
     "name": "KYROlll MANAGER",
@@ -36,7 +36,7 @@
     {
       "id": "kyrolll-soul",
       "name": "KYROlll SOUL",
-      "version": "1.3.0",
+      "version": "1.4.0",
       "tagline": "Analog soul, tape-worn and alive.",
       "description": "A warm, breathing saturation unit built from hand-wound transformer models and worn tape heads. SOUL adds weight without smearing transients — from a whisper of glue to full-bodied drive.",
       "identifier": "store.kyrolll.soul",
@@ -45,22 +45,25 @@
         "VST3"
       ],
       "featured": true,
-      "releasedAt": "2026-11-24",
-      "size": 19495,
+      "releasedAt": "2026-11-26",
+      "size": 316818,
       "downloads": {
         "mac": {
-          "url": "app://plugins/kyrolll-soul-1.3.0-mac.zip",
-          "sha256": "225c11492e0b1f2950b0aefb80f28a98766acebfc438e19dd65a956ae351d19f",
-          "size": 19495
+          "url": "https://raw.githubusercontent.com/KYROllll/KYROlll-MANAGER/main/resources/plugins/kyrolll-soul-1.4.0-mac.zip",
+          "fallbackUrl": "app://plugins/kyrolll-soul-1.4.0-mac.zip",
+          "sha256": "78d154a27a881bcceb6ccb4df732b3e8925b9e6bdd7f66707a1c1e264bc45101",
+          "size": 316818
         },
         "win": {
-          "url": "app://plugins/kyrolll-soul-1.3.0-win.zip",
-          "sha256": "55264eeabaef80b27346b4fde5309013847debf963717bdc0055f469fddb7ba5",
-          "size": 1054
+          "url": "https://raw.githubusercontent.com/KYROllll/KYROlll-MANAGER/main/resources/plugins/kyrolll-soul-1.4.0-win.zip",
+          "fallbackUrl": "app://plugins/kyrolll-soul-1.4.0-win.zip",
+          "sha256": "c11c9f359dec53ed502972a88e675249cc89ea9db5a7c704e16f64051c36a5ed",
+          "size": 150824
         }
       },
       "releaseNotes": [
         "New tape bias control with improved low-end response",
+        "48 kHz transformer/tape impulse response bundled with every format",
         "Reduced CPU usage at 96 kHz",
         "Fixed automation smoothing on the drive knob"
       ],

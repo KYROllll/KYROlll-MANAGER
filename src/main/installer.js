@@ -57,6 +57,10 @@ function formatBytes(bytes) {
 }
 
 function emit(run, phase, percent, extra = {}) {
+  if (run.phase !== phase) {
+    run.phase = phase;
+    run.phaseStartedAt = Date.now();
+  }
   const step = STEP[phase] || STEP.preparing;
   const label = phase === 'installing' ? `Installing ${run.formatsLabel} bundle${run.formatsLabel.includes('&') ? 's' : ''}` : step.label;
   run.onProgress({
@@ -70,6 +74,21 @@ function emit(run, phase, percent, extra = {}) {
   });
 }
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Keep a phase on screen long enough to be readable. The actual install can
+ * finish in a few milliseconds for app-managed packages, so without a small
+ * floor the progress sheet would jump straight from 8% to 100%. Work that
+ * genuinely takes longer than the floor is never slowed down.
+ */
+async function holdPhase(run, phase, minimumMs) {
+  if (run.phase !== phase) return;
+  const elapsed = Date.now() - (run.phaseStartedAt || Date.now());
+  if (elapsed < minimumMs) await sleep(minimumMs - elapsed);
+  ensureNotCancelled(run);
+}
+
 async function fileSize(file) {
   try {
     const stat = await fs.stat(file);
@@ -79,23 +98,36 @@ async function fileSize(file) {
   }
 }
 
-/** Copy a local file with coarse progress so the UI still animates. */
-async function copyLocalFile(source, destination, onProgress) {
+/**
+ * Copy a local archive with byte-level progress. A minimum duration lets the
+ * UI show the download moving instead of painting a single 100% frame; the
+ * throttle only applies to local sources, never to real network downloads.
+ */
+async function copyLocalFile(source, destination, onProgress, { minimumDurationMs = 0 } = {}) {
   const total = await fileSize(source);
   await fs.mkdir(path.dirname(destination), { recursive: true });
-  await new Promise((resolve, reject) => {
-    const reader = fsSync.createReadStream(source);
-    const writer = fsSync.createWriteStream(destination);
-    let received = 0;
-    reader.on('data', (chunk) => {
-      received += chunk.length;
-      if (total) onProgress(received / total);
-    });
-    reader.on('error', reject);
-    writer.on('error', reject);
-    writer.on('finish', resolve);
-    reader.pipe(writer);
-  });
+  const reader = await fs.open(source, 'r');
+  const writer = await fs.open(destination, 'w');
+  const chunk = Buffer.alloc(64 * 1024);
+  const startedAt = Date.now();
+  let received = 0;
+  try {
+    while (received < total) {
+      const { bytesRead } = await reader.read(chunk, 0, chunk.length, received);
+      if (!bytesRead) break;
+      await writer.write(chunk, 0, bytesRead);
+      received += bytesRead;
+      onProgress(total ? received / total : 1, received, total);
+      if (minimumDurationMs && total) {
+        const targetElapsed = (received / total) * minimumDurationMs;
+        const elapsed = Date.now() - startedAt;
+        if (elapsed < targetElapsed) await sleep(targetElapsed - elapsed);
+      }
+    }
+  } finally {
+    await reader.close().catch(() => {});
+    await writer.close().catch(() => {});
+  }
   return total;
 }
 
@@ -207,37 +239,60 @@ function downloadHttp(url, destination, run, onProgress) {
   });
 }
 
-async function download(plugin, downloadInfo, destination, run) {
-  const url = downloadInfo.url;
-  if (!url) throw new InstallError('This catalog entry has no download URL for your platform.', 'NO_DOWNLOAD_URL');
-
+async function downloadOne(plugin, url, destination, run) {
   await fs.mkdir(path.dirname(destination), { recursive: true });
 
   if (url.startsWith('demo://')) {
     const archive = await demoArchivePath(url);
-    await copyLocalFile(archive, destination, (ratio) => {
-      emit(run, 'downloading', 8 + ratio * 50, {
-        detail: ratio >= 1 ? 'Demo archive' : `Copying demo archive ${Math.round(ratio * 100)}%`,
-      });
-    });
+    const size = await fileSize(archive);
+    await copyLocalFile(
+      archive,
+      destination,
+      (ratio) => {
+        emit(run, 'downloading', 8 + ratio * 50, {
+          detail:
+            ratio >= 1
+              ? `Demo archive · ${formatBytes(size)}`
+              : `Copying demo archive ${Math.round(ratio * 100)}% · ${formatBytes(size)}`,
+        });
+      },
+      { minimumDurationMs: 500 }
+    );
     return;
   }
 
   if (url.startsWith('app://')) {
     const archive = await appArchivePath(url);
-    await copyLocalFile(archive, destination, (ratio) => {
-      emit(run, 'downloading', 8 + ratio * 50, {
-        detail: ratio >= 1 ? 'App-managed package ready' : `Preparing app-managed package ${Math.round(ratio * 100)}%`,
-      });
-    });
+    const size = await fileSize(archive);
+    await copyLocalFile(
+      archive,
+      destination,
+      (ratio) => {
+        emit(run, 'downloading', 8 + ratio * 50, {
+          detail:
+            ratio >= 1
+              ? `App-managed package · ${formatBytes(size)}`
+              : `Downloading app-managed package ${Math.round(ratio * 100)}% · ${formatBytes(size)}`,
+        });
+      },
+      { minimumDurationMs: 650 }
+    );
     return;
   }
 
   if (url.startsWith('file://') || !/^https?:\/\//i.test(url)) {
     const source = url.startsWith('file://') ? require('node:url').fileURLToPath(url) : path.resolve(url);
-    await copyLocalFile(source, destination, (ratio) => {
-      emit(run, 'downloading', 8 + ratio * 50, { detail: `Reading ${path.basename(source)}` });
-    });
+    const size = await fileSize(source);
+    await copyLocalFile(
+      source,
+      destination,
+      (ratio) => {
+        emit(run, 'downloading', 8 + ratio * 50, {
+          detail: `Reading ${path.basename(source)}${size ? ` · ${formatBytes(size)}` : ''}`,
+        });
+      },
+      { minimumDurationMs: 500 }
+    );
     return;
   }
 
@@ -247,15 +302,95 @@ async function download(plugin, downloadInfo, destination, run) {
   });
 }
 
-async function extractArchive(archive, destination) {
+/**
+ * Try the catalog's primary URL first (the published package), then the
+ * bundled app:// archive. This is what lets a catalog-only version bump work
+ * on an already-installed KYROlll MANAGER while keeping offline installs.
+ */
+async function download(plugin, downloadInfo, destination, run) {
+  const candidates = [];
+  if (downloadInfo.url) candidates.push(downloadInfo.url);
+  if (downloadInfo.fallbackUrl && downloadInfo.fallbackUrl !== downloadInfo.url) {
+    candidates.push(downloadInfo.fallbackUrl);
+  }
+  if (!candidates.length) {
+    throw new InstallError('This catalog entry has no download URL for your platform.', 'NO_DOWNLOAD_URL');
+  }
+
+  let lastError = null;
+  for (let index = 0; index < candidates.length; index += 1) {
+    const url = candidates[index];
+    try {
+      await downloadOne(plugin, url, destination, run);
+      return url;
+    } catch (err) {
+      lastError = err;
+      if (err && err.code === 'CANCELLED') throw err;
+      if (index < candidates.length - 1) {
+        emit(run, 'downloading', 8, { detail: 'Published source unavailable — using the bundled package' });
+        await fs.rm(destination, { force: true }).catch(() => {});
+      }
+    }
+  }
+  throw lastError;
+}
+
+async function summarizeTree(root) {
+  let files = 0;
+  let bytes = 0;
+  const queue = [root];
+  while (queue.length) {
+    const dir = queue.shift();
+    let entries;
+    try {
+      entries = await fs.readdir(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const entry of entries) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        queue.push(full);
+      } else if (entry.isFile()) {
+        files += 1;
+        bytes += await fileSize(full);
+      }
+    }
+  }
+  return { files, bytes };
+}
+
+async function extractArchive(archive, destination, run) {
   await fs.mkdir(destination, { recursive: true });
   if (archive.toLowerCase().endsWith('.zip')) {
-    await extractZip(archive, { dir: destination });
-    return;
+    let seen = 0;
+    await extractZip(archive, {
+      dir: destination,
+      onEntry: (entry, zipfile) => {
+        seen += 1;
+        const total = zipfile && zipfile.entryCount ? zipfile.entryCount : seen;
+        const label = String(entry.fileName || '').replace(/\/$/, '');
+        emit(run, 'extracting', 62 + Math.min(1, seen / total) * 8, {
+          detail: label ? `Extracting ${path.basename(label)}` : `Extracting ${seen} files`,
+        });
+      },
+    });
+    return seen;
   }
   if (/\.(tar\.gz|tgz)$/i.test(archive)) {
-    await tar.x({ file: archive, cwd: destination, strict: true });
-    return;
+    let seen = 0;
+    await tar.x({
+      file: archive,
+      cwd: destination,
+      strict: true,
+      onentry: (entry) => {
+        seen += 1;
+        emit(run, 'extracting', 62 + Math.min(1, seen / 40) * 8, {
+          detail: `Extracting ${path.basename(entry.path)}`,
+        });
+      },
+    });
+    return seen;
   }
   throw new InstallError(`Unsupported archive type "${path.extname(archive)}". Use .zip, .tar.gz or .tgz.`, 'UNSUPPORTED_ARCHIVE');
 }
@@ -339,7 +474,9 @@ async function placeBundles(bundles, run) {
         throw new InstallError(`Could not place ${item.bundle.name}: ${err.message}`, 'PLACE_FAILED');
       }
       swaps.push({ target: item.target, backup });
-      emit(run, 'installing', 75 + (swaps.length / staged.length) * 15, { detail: `Placed ${item.bundle.name}` });
+      emit(run, 'installing', 75 + (swaps.length / staged.length) * 15, {
+        detail: `Placed ${item.bundle.name} · ${item.bundle.format}`,
+      });
     }
   } catch (err) {
     // Roll back every bundle already swapped in during this run.
@@ -389,14 +526,15 @@ async function runInstall({ plugin, onProgress }) {
   try {
     emit(run, 'preparing', 3, { detail: `Preparing ${plugin.name} ${plugin.version}` });
     await fs.mkdir(workDir, { recursive: true });
-    ensureNotCancelled(run);
+    await holdPhase(run, 'preparing', 250);
 
-    emit(run, 'downloading', 8, { detail: 'Starting download' });
-    await download(plugin, downloadInfo, archive, run);
+    emit(run, 'downloading', 8, { detail: `Fetching ${plugin.name} ${plugin.version}` });
+    const sourceUrl = await download(plugin, downloadInfo, archive, run);
     ensureNotCancelled(run);
 
     const stats = await fs.stat(archive);
     emit(run, 'downloading', 58, { detail: `Downloaded ${formatBytes(stats.size)}` });
+    await holdPhase(run, 'downloading', 650);
 
     if (downloadInfo.size && stats.size !== downloadInfo.size) {
       throw new InstallError(
@@ -406,7 +544,7 @@ async function runInstall({ plugin, onProgress }) {
     }
 
     if (downloadInfo.sha256) {
-      emit(run, 'extracting', 60, { detail: 'Verifying checksum' });
+      emit(run, 'extracting', 60, { detail: 'Verifying SHA-256 checksum' });
       const digest = await sha256(archive);
       if (digest !== downloadInfo.sha256) {
         throw new InstallError('Checksum mismatch — the downloaded archive is incomplete or corrupted.', 'CHECKSUM_MISMATCH');
@@ -414,9 +552,13 @@ async function runInstall({ plugin, onProgress }) {
     }
 
     emit(run, 'extracting', 62, { detail: 'Unpacking archive' });
-    await extractArchive(archive, extractDir);
+    const entryCount = await extractArchive(archive, extractDir, run);
     ensureNotCancelled(run);
-    emit(run, 'extracting', 71, { detail: 'Looking for plugin bundles' });
+    const summary = await summarizeTree(extractDir);
+    emit(run, 'extracting', 71, {
+      detail: `Extracted ${summary.files || entryCount} files · ${formatBytes(summary.bytes)}`,
+    });
+    await holdPhase(run, 'extracting', 500);
 
     const bundles = await findBundles(extractDir, platformFormats);
     if (!bundles.length) {
@@ -427,16 +569,19 @@ async function runInstall({ plugin, onProgress }) {
     }
     run.formatsLabel = [...new Set(bundles.map((bundle) => bundle.format))].join(' & ');
 
-    emit(run, 'installing', 74, { detail: bundles.map((b) => b.format).join(' + ') });
+    emit(run, 'installing', 74, {
+      detail: `Found ${bundles.length} ${run.formatsLabel} bundle${bundles.length === 1 ? '' : 's'}`,
+    });
     const placed = await placeBundles(bundles, run);
     ensureNotCancelled(run);
+    await holdPhase(run, 'installing', 500);
 
     emit(run, 'finalizing', 94, { detail: 'Writing installed.json' });
     const record = {
       version: plugin.version,
       platform: platformKey(),
       installedAt: new Date().toISOString(),
-      sourceUrl: downloadInfo.url,
+      sourceUrl,
       bundles: bundles.map((bundle, index) => ({
         format: bundle.format,
         name: bundle.name,
@@ -444,10 +589,12 @@ async function runInstall({ plugin, onProgress }) {
       })),
     };
     await installedState.setRecord(plugin.id, record);
+    await holdPhase(run, 'finalizing', 250);
 
     emit(run, 'done', 100, {
-      detail: `Installed in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
+      detail: `Installed ${plugin.name} ${plugin.version} in ${((Date.now() - startedAt) / 1000).toFixed(1)}s`,
       bundles: record.bundles,
+      sourceUrl,
     });
     return record;
   } finally {

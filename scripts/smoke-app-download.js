@@ -125,16 +125,19 @@ server.listen(0, '127.0.0.1', () => {
             const text = (sel) => document.querySelector(sel)?.textContent?.trim() || '';
             return {
               button: text('#app-update-download'),
+              reveal: text('#app-update-reveal'),
+              revealHidden: document.querySelector('#app-update-reveal').hidden,
               progress: text('#app-update-progress'),
               progressHidden: document.querySelector('#app-update-progress').hidden,
             };
           })()`);
-          if (state.button === 'Show Installer') break;
+          if (state.button === 'Install Update') break;
           await new Promise((resolve) => setTimeout(resolve, 100));
         }
 
         console.log('download state', JSON.stringify(state));
-        assert(state.button === 'Show Installer', `Expected "Show Installer", got "${state.button}"`);
+        assert(state.button === 'Install Update', `Expected "Install Update", got "${state.button}"`);
+        assert(!state.revealHidden && state.reveal === 'Show Installer', 'Expected a "Show Installer" action');
         assert(!state.progressHidden, 'Download progress line should be visible');
         assert(/INSTALLER READY/i.test(state.progress), `Unexpected progress line: ${state.progress}`);
 
