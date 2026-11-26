@@ -11,6 +11,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { readPng } = require('./lib/png');
 
 const ROOT = path.join(__dirname, '..');
 const failures = [];
@@ -54,6 +55,50 @@ check(
     build.dmg.contents.some((item) => item.type === 'file') &&
     build.dmg.contents.some((item) => item.type === 'link' && item.path === '/Applications')
 );
+
+console.log('DMG design');
+const dmgWindow = build.dmg?.window || {};
+const dmgContents = build.dmg?.contents || [];
+const appSlot = dmgContents.find((item) => item.type === 'file') || {};
+const applicationsSlot = dmgContents.find((item) => item.type === 'link') || {};
+check('DMG window is 660x420', dmgWindow.width === 660 && dmgWindow.height === 420);
+check('DMG icon size is 128', build.dmg?.iconSize === 128);
+check('DMG app icon sits at (180, 200)', appSlot.x === 180 && appSlot.y === 200);
+check('DMG Applications link sits at (480, 200)', applicationsSlot.x === 480 && applicationsSlot.y === 200);
+
+const backgroundPath = build.dmg?.background ? path.join(ROOT, build.dmg.background) : null;
+const retinaPath = backgroundPath ? backgroundPath.replace(/\.png$/i, '@2x.png') : null;
+const background = backgroundPath && fs.existsSync(backgroundPath) ? readPng(backgroundPath) : null;
+const retina = retinaPath && fs.existsSync(retinaPath) ? readPng(retinaPath) : null;
+
+check('DMG background is 660x420', Boolean(background) && background.width === 660 && background.height === 420, background && `${background.width}x${background.height}`);
+check('DMG Retina background exists at 1320x840', Boolean(retina) && retina.width === 1320 && retina.height === 840, retina && `${retina.width}x${retina.height}`);
+
+if (background) {
+  const corners = [
+    ['top-left', 2, 2],
+    ['top-right', background.width - 3, 2],
+    ['bottom-left', 2, background.height - 3],
+    ['bottom-right', background.width - 3, background.height - 3],
+    ['centre', Math.round(background.width / 2), Math.round(background.height / 2)],
+  ];
+  const lightCorners = corners.filter(([, x, y]) => background.pixel(x, y).reduce((a, b) => a + b, 0) > 6);
+  check('DMG plate is pure black around the edges and centre', lightCorners.length === 0, lightCorners.map((c) => c[0]).join(', '));
+
+  function countPixels(x0, x1, y0, y1, threshold) {
+    let count = 0;
+    for (let y = y0; y <= y1; y += 1) {
+      for (let x = x0; x <= x1; x += 1) {
+        if (background.pixel(x, y).reduce((a, b) => a + b, 0) >= threshold) count += 1;
+      }
+    }
+    return count;
+  }
+
+  check('DMG wordmark is drawn in the upper area', countPixels(200, 460, 50, 108, 400) > 200);
+  check('DMG white dotted arrow spans the icon gap', countPixels(258, 406, 184, 218, 600) > 60);
+  check('DMG caption is drawn at the bottom', countPixels(150, 510, 368, 396, 90) > 200);
+}
 check('fallback catalog exists', fs.existsSync(path.join(ROOT, 'resources', 'catalog.fallback.json')));
 check('app-managed plug-in package directory exists', fs.existsSync(path.join(ROOT, 'resources', 'plugins')));
 
